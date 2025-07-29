@@ -11,12 +11,12 @@ const photoSchema = new mongoose.Schema({
     required: true
   },
   caption: String,
-  location: String,         // 文本地址，比如“北京三里屯”
-  coordinates: {            // 经纬度坐标
+  location: String,         
+  coordinates: {            
     lat: Number,
     lng: Number
   },
-  ipAddress: String,        // 可选，上传者的 IP（非必须）
+  ipAddress: String,        
   createdAt: {
     type: Date,
     default: Date.now
