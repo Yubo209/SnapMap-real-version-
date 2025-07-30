@@ -1,22 +1,20 @@
 const Post = require('../models/Post');
 
-
 const createPost = async (req, res) => {
   try {
-    const { name, description, address, imageBase64 } = req.body;
+    const { name, description, address, imageUrl, lat, lng } = req.body;
 
-    if (!name || !description || !address || !imageBase64) {
+    
+    if (!name || !description || !address || !imageUrl || lat == null || lng == null) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
     
-    const lat = 41.8756; 
-    const lng = -87.6272;
-
     const newPost = new Post({
       title: name,
       description,
-      imageUrl: imageBase64,
+      address,
+      imageUrl,  
       lat,
       lng
     });
