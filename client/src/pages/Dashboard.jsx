@@ -1,8 +1,44 @@
-// client/pages/Dashboard.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import './Dashboard.css';
+import UploadPost from '../components/UploadPost';
+import MapView from '../components/MapView';
+import MyPosts from '../components/MyPosts';
 
 const Dashboard = () => {
+  const [section, setSection] = useState('map');  
+
+  const sampleLocations = [
+    { lat: 40.7128, lng: -74.0060, title: 'New York Spot' },
+    { lat: 34.0522, lng: -118.2437, title: 'LA View' },
+    { lat: 35.6895, lng: 139.6917, title: 'Tokyo' },
+  ];
+
+  const renderSection = () => {
+    switch (section) {
+      case 'map':
+        return (
+          <>
+            <h2>📍 Map View</h2>
+            <MapView />
+
+          </>
+        );
+      case 'upload':
+        return (
+          <>
+            <h2>⬆️ Upload a New Post</h2>
+            <UploadPost />
+          </>
+        );
+        case 'posts':
+          return <MyPosts />;
+      case 'settings':
+        return <div>Settings (To be implemented)</div>;
+      default:
+        return <MapView />;
+    }
+  };
+
   return (
     <div className="dashboard-container">
       {/* Header */}
@@ -23,22 +59,16 @@ const Dashboard = () => {
         {/* Sidebar */}
         <nav className="dashboard-sidebar">
           <ul>
-            <li>📍 Map</li>
-            <li>🖼️ My Posts</li>
-            <li>⚙️ Settings</li>
+            <li onClick={() => setSection('map')}>📍 Map</li>
+            <li onClick={() => setSection('upload')}>⬆️ Upload Post</li>
+            <li onClick={() => setSection('posts')}>🖼️ My Posts</li>
+            <li onClick={() => setSection('settings')}>⚙️ Settings</li>
           </ul>
         </nav>
 
-        {/* Feed */}
+        {/* Dynamic Section */}
         <main className="dashboard-feed">
-          <h2>Recent Uploads</h2>
-          {/* 图片流将在这里动态渲染 */}
-          <div className="photo-grid">
-            {/* 示例图片 */}
-            <img src="/sample1.jpg" alt="Sample 1" />
-            <img src="/sample2.jpg" alt="Sample 2" />
-            <img src="/sample3.jpg" alt="Sample 3" />
-          </div>
+          {renderSection()}
         </main>
       </div>
     </div>

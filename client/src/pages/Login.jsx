@@ -27,7 +27,7 @@ function Login() {
         setError(data.message)
       } else {
         localStorage.setItem('token', data.token)
-        navigate('/')
+        navigate('/dashboard')
       }
     } catch (err) {
       setError('Server error')
