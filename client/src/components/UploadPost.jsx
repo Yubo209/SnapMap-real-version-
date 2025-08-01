@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 
 const UploadPost = () => {
@@ -25,35 +26,19 @@ const UploadPost = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const addressInput = formData.address.trim();
-    let resolvedLat = null;
-    let resolvedLng = null;
+    let lat = null;
+    let lng = null;
 
-    
-    if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(addressInput)) {
-      const [latStr, lngStr] = addressInput.split(',');
-      resolvedLat = parseFloat(latStr);
-      resolvedLng = parseFloat(lngStr);
-    } else {
-      try {
-        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${addressInput}`);
-        const geoData = await geoRes.json();
-        if (geoData.length > 0) {
-          resolvedLat = parseFloat(geoData[0].lat);
-          resolvedLng = parseFloat(geoData[0].lon);
-        } else {
-          setMessage("❌ Could not resolve address to coordinates.");
-          return;
-        }
-      } catch (geoErr) {
-        console.error("Geocoding failed:", geoErr);
-        setMessage("❌ Geocoding error.");
-        return;
+    try {
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${formData.address}`);
+      const geoData = await geoRes.json();
+      if (geoData.length > 0) {
+        lat = parseFloat(geoData[0].lat);
+        lng = parseFloat(geoData[0].lon);
       }
-    }
-
-    if (!formData.image) {
-      setMessage('❌ Please select an image.');
+    } catch (geoErr) {
+      console.error("Geocoding failed:", geoErr);
+      setMessage("Failed to resolve address to coordinates.");
       return;
     }
 
@@ -65,12 +50,10 @@ const UploadPost = () => {
         name: formData.name,
         description: formData.description,
         address: formData.address,
-        imageUrl: base64Image,
-        lat: resolvedLat,
-        lng: resolvedLng
+        imageBase64: base64Image,
+        lat,
+        lng
       };
-
-      console.log('📤 Payload to backend:', payload);
 
       try {
         const res = await fetch('http://localhost:5174/api/posts', {
@@ -84,15 +67,19 @@ const UploadPost = () => {
           setFormData({ name: '', description: '', address: '', image: null });
           setPreview(null);
         } else {
-          setMessage('❌ Failed to upload post.');
+          setMessage('❌ Failed to upload.');
         }
       } catch (err) {
-        console.error('❌ Upload error:', err);
+        console.error(err);
         setMessage('❌ Error uploading post.');
       }
     };
 
-    reader.readAsDataURL(formData.image);
+    if (formData.image) {
+      reader.readAsDataURL(formData.image);
+    } else {
+      setMessage('Please select an image.');
+    }
   };
 
   return (
@@ -110,8 +97,18 @@ const UploadPost = () => {
         </label>
         <br />
         <label>
-          🗺️ Address or "lat,lng":
-          <input type="text" name="address" value={formData.address} onChange={handleChange} required />
+          🗺️ Address (or place name):
+          <input
+            type="text"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            required
+            placeholder="e.g. Yosemite National Park, Tunnel View, California"
+          />
+          <small style={{ color: '#666' }}>
+            Please include full location info (e.g. name + city + national park or region)
+          </small>
         </label>
         <br />
         <label>
@@ -128,3 +125,4 @@ const UploadPost = () => {
 };
 
 export default UploadPost;
+

@@ -1,79 +1,153 @@
-/* client/pages/Dashboard.css */
+/* 根容器布局 */
 .dashboard-container {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background-color: #f5f5f5;
-    font-family: 'Segoe UI', sans-serif;
-  }
-  
-  .dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 32px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  .profile-btn {
-    padding: 8px 16px;
-    border: none;
-    background-color: #333;
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  
-  .avatar-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-  }
-  
-  .dashboard-body {
-    display: flex;
-    flex: 1;
-  }
-  
-  .dashboard-sidebar {
-    width: 180px;
-    background-color: #fff;
-    border-right: 1px solid #ddd;
-    padding: 24px 16px;
-  }
-  
-  .dashboard-sidebar ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .dashboard-sidebar li {
-    margin-bottom: 16px;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  
-  .dashboard-feed {
-    flex: 1;
-    padding: 24px;
-    overflow-y: auto;
-  }
-  
-  .photo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 16px;
-  }
-  
-  .photo-grid img {
-    width: 100%;
-    border-radius: 8px;
-  }
-  
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+}
+
+/* 顶部栏 */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-btn {
+  padding: 8px 16px;
+  border: none;
+  background-color: #333;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.avatar-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+/* 主体布局：侧边栏 + 内容区 */
+.dashboard-body {
+  display: flex;
+  flex: 1;
+}
+
+/* 侧边栏 */
+.dashboard-sidebar {
+  width: 200px;
+  background-color: #fff;
+  border-right: 1px solid #ddd;
+  padding: 24px 16px;
+}
+
+.dashboard-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dashboard-sidebar li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: #333;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dashboard-sidebar li:hover {
+  background-color: #e0e7ff;
+}
+
+.dashboard-sidebar li.active {
+  background-color: #e0e7ff;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+
+/* 内容区 */
+.dashboard-feed {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background-color: #f9fafb;
+}
+
+/* 上传表单和帖子图片 */
+.upload-form label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+.upload-form input[type="text"],
+.upload-form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.upload-form input[type="file"] {
+  margin-top: 8px;
+}
+
+.upload-form button {
+  margin-top: 16px;
+  padding: 10px 16px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.upload-form button:hover {
+  background-color: #4338ca;
+}
+
+.upload-form img {
+  width: 100%;
+  max-height: 250px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-top: 12px;
+}
+
+/* 图集展示网格 */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.photo-grid img {
+  width: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}

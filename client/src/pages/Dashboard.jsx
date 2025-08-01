@@ -2,38 +2,45 @@ import React, { useState } from 'react';
 import './Dashboard.css';
 import UploadPost from '../components/UploadPost';
 import MapView from '../components/MapView';
-import MyPosts from '../components/MyPosts';
+import AllSpots from '../components/AllSpots';
+import MyProfile from '../pages/MyProfile'; 
+import { MapPin, Upload, Image, Settings } from 'lucide-react';
 
 const Dashboard = () => {
-  const [section, setSection] = useState('map');  
-
-  const sampleLocations = [
-    { lat: 40.7128, lng: -74.0060, title: 'New York Spot' },
-    { lat: 34.0522, lng: -118.2437, title: 'LA View' },
-    { lat: 35.6895, lng: 139.6917, title: 'Tokyo' },
-  ];
+  const [section, setSection] = useState('map');
 
   const renderSection = () => {
     switch (section) {
       case 'map':
         return (
           <>
-            <h2>📍 Map View</h2>
+            <h2>Map View</h2>
             <MapView />
-
           </>
         );
       case 'upload':
         return (
           <>
-            <h2>⬆️ Upload a New Post</h2>
+            <h2>Upload a New Post</h2>
             <UploadPost />
           </>
         );
-        case 'posts':
-          return <MyPosts />;
+      case 'posts':
+        return (
+          <>
+            <h2>All Photography Spots</h2>
+            <AllSpots />
+          </>
+        );
       case 'settings':
         return <div>Settings (To be implemented)</div>;
+      case 'myprofile':
+        return (
+          <>
+            
+            <MyProfile />
+          </>
+        );
       default:
         return <MapView />;
     }
@@ -45,11 +52,14 @@ const Dashboard = () => {
       <header className="dashboard-header">
         <h1>SnapMap</h1>
         <div className="header-right">
-          <button className="profile-btn">Profile</button>
+          <button className="profile-btn" onClick={() => setSection('myprofile')}>
+            Profile
+          </button>
           <img
-            src="/default-avatar.png"
+            src="/default-avatar.png" 
             alt="Avatar"
             className="avatar-icon"
+            onClick={() => setSection('myprofile')}
           />
         </div>
       </header>
@@ -59,17 +69,39 @@ const Dashboard = () => {
         {/* Sidebar */}
         <nav className="dashboard-sidebar">
           <ul>
-            <li onClick={() => setSection('map')}>📍 Map</li>
-            <li onClick={() => setSection('upload')}>⬆️ Upload Post</li>
-            <li onClick={() => setSection('posts')}>🖼️ My Posts</li>
-            <li onClick={() => setSection('settings')}>⚙️ Settings</li>
+            <li
+              className={section === 'map' ? 'active' : ''}
+              onClick={() => setSection('map')}
+            >
+              <MapPin size={18} style={{ marginRight: 8 }} />
+              Map
+            </li>
+            <li
+              className={section === 'upload' ? 'active' : ''}
+              onClick={() => setSection('upload')}
+            >
+              <Upload size={18} style={{ marginRight: 8 }} />
+              Upload Post
+            </li>
+            <li
+              className={section === 'posts' ? 'active' : ''}
+              onClick={() => setSection('posts')}
+            >
+              <Image size={18} style={{ marginRight: 8 }} />
+              AllSpots
+            </li>
+            <li
+              className={section === 'settings' ? 'active' : ''}
+              onClick={() => setSection('settings')}
+            >
+              <Settings size={18} style={{ marginRight: 8 }} />
+              Settings
+            </li>
           </ul>
         </nav>
 
         {/* Dynamic Section */}
-        <main className="dashboard-feed">
-          {renderSection()}
-        </main>
+        <main className="dashboard-feed">{renderSection()}</main>
       </div>
     </div>
   );
