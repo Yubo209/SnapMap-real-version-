@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import './Feed.css';
+import { getPhotos } from '../api';
 
 const Feed = () => {
   const [photos, setPhotos] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/photos')
-      .then(res => res.json())
-      .then(data => setPhotos(data));
+    getPhotos().then(setPhotos).catch(console.error);
   }, []);
 
   return (

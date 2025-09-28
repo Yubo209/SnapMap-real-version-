@@ -32,7 +32,8 @@ const MapView = () => {
         <Marker key={index} position={[post.lat, post.lng]} icon={customIcon}>
           <Popup>
             <div style={{ textAlign: 'center' }}>
-              <h3>{post.title}</h3>
+              
+              <h3>{post.name}</h3>
               <img src={post.imageUrl} alt={post.title} width="120" />
               <p>📍 {post.lat.toFixed(4)}, {post.lng.toFixed(4)}</p>
               <p>{post.description}</p>

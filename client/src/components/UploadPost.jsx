@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { uploadImage, createPost } from '../api';
 
 const UploadPost = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +11,7 @@ const UploadPost = () => {
 
   const [preview, setPreview] = useState(null);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,67 +19,63 @@ const UploadPost = () => {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setFormData(prev => ({ ...prev, image: file }));
-    setPreview(URL.createObjectURL(file));
+    const file = e.target.files?.[0];
+    setFormData(prev => ({ ...prev, image: file || null }));
+    setPreview(file ? URL.createObjectURL(file) : null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let lat = null;
-    let lng = null;
+    if (!formData.image) {
+      setMessage('Please select an image.');
+      return;
+    }
 
+    setLoading(true);
+    setMessage('');
+
+    // 1) 地址 → 经纬度
+    let lat = null, lng = null;
     try {
-      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${formData.address}`);
-      const geoData = await geoRes.json();
-      if (geoData.length > 0) {
-        lat = parseFloat(geoData[0].lat);
-        lng = parseFloat(geoData[0].lon);
+      if (formData.address) {
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.address)}`);
+        const geoData = await geoRes.json();
+        if (Array.isArray(geoData) && geoData.length > 0) {
+          lat = parseFloat(geoData[0].lat);
+          lng = parseFloat(geoData[0].lon);
+        }
       }
     } catch (geoErr) {
       console.error("Geocoding failed:", geoErr);
       setMessage("Failed to resolve address to coordinates.");
+      setLoading(false);
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64Image = reader.result;
+    try {
+      // 2) 先把文件发到 /api/upload/image
+      const up = await uploadImage(formData.image); // { url, public_id }
 
-      const payload = {
+      // 3) 再创建帖子
+      await createPost({
         name: formData.name,
         description: formData.description,
         address: formData.address,
-        imageBase64: base64Image,
+        imageUrl: up.url,
+        imagePublicId: up.public_id,
         lat,
         lng
-      };
+      });
 
-      try {
-        const res = await fetch('http://localhost:5174/api/posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-          setMessage('✅ Post uploaded successfully!');
-          setFormData({ name: '', description: '', address: '', image: null });
-          setPreview(null);
-        } else {
-          setMessage('❌ Failed to upload.');
-        }
-      } catch (err) {
-        console.error(err);
-        setMessage('❌ Error uploading post.');
-      }
-    };
-
-    if (formData.image) {
-      reader.readAsDataURL(formData.image);
-    } else {
-      setMessage('Please select an image.');
+      setMessage('✅ Post uploaded successfully!');
+      setFormData({ name: '', description: '', address: '', image: null });
+      setPreview(null);
+    } catch (err) {
+      console.error(err);
+      setMessage('❌ Failed to upload.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -117,7 +114,7 @@ const UploadPost = () => {
         </label>
         {preview && <img src={preview} alt="Preview" style={{ width: '100%', marginTop: '10px' }} />}
         <br />
-        <button type="submit">Submit Post</button>
+        <button type="submit" disabled={loading}>{loading ? 'Uploading…' : 'Submit Post'}</button>
       </form>
       {message && <p style={{ marginTop: '1rem' }}>{message}</p>}
     </div>
