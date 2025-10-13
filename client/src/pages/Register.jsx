@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css';
-
+import { API_BASE } from '../api'; 
 function Register() {
   const [formData, setFormData] = useState({
     username: '',
@@ -21,7 +21,7 @@ function Register() {
     console.log("📤 Submitting form:", formData);
 
     try {
-      const res = await fetch('http://localhost:5174/api/auth/register', {
+      await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
