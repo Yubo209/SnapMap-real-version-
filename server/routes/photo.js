@@ -1,15 +1,15 @@
-// routes/photo.js
+
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 const Photo = require('../models/Photo');
-const cloudinary = require('../lib/cloudinary'); // ✅ 新增
+const cloudinary = require('../lib/cloudinary'); 
 
-// 上传作品（需要登录）
+
 router.post('/', authMiddleware, async (req, res) => {
-  const { imageUrl, imagePublicId, caption, location, coordinates } = req.body; // 🔄 修改：接收 imagePublicId
+  const { imageUrl, imagePublicId, caption, location, coordinates } = req.body;
 
-  if (!imageUrl || !imagePublicId) { // 🔄 修改：必填校验
+  if (!imageUrl || !imagePublicId) { 
     return res.status(400).json({ message: "imageUrl and imagePublicId are required" });
   }
 
@@ -17,7 +17,7 @@ router.post('/', authMiddleware, async (req, res) => {
     const newPhoto = await Photo.create({
       user: req.user.id,
       imageUrl,
-      imagePublicId, // ✅ 新增：写入
+      imagePublicId, 
       caption,
       location,
       coordinates,
@@ -37,7 +37,7 @@ router.get('/', async (_req, res) => {
     res.status(500).json({ message: 'Error fetching photos' });
   }
 });
-// 删除一张作品（需要登录 + 是本人上传）
+
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const photo = await Photo.findById(req.params.id);
@@ -50,7 +50,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
       return res.status(403).json({ message: "You are not allowed to delete this photo" });
     }
 
-    // ✅ 先删云端
+    
     if (photo.imagePublicId) {
       try {
         await cloudinary.uploader.destroy(photo.imagePublicId);
