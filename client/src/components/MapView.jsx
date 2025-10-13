@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-
+import { API_BASE } from '../api';
 const customIcon = new L.Icon({
   iconUrl: '/icons8-map-pin-50.png',
   iconSize: [40, 40],
@@ -14,7 +14,7 @@ const MapView = () => {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:5174/api/posts')
+    fetch(`${API_BASE}/api/auth/login`)
       .then(res => res.json())
       .then(data => {
         const validPosts = data.filter(p => typeof p.lat === 'number' && typeof p.lng === 'number');
