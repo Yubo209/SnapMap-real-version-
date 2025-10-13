@@ -14,7 +14,7 @@ const MapView = () => {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/auth/login`)
+    fetch(`${API_BASE}/api/posts`)
       .then(res => res.json())
       .then(data => {
         const validPosts = data.filter(p => typeof p.lat === 'number' && typeof p.lng === 'number');
