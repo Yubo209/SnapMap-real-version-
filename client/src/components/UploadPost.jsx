@@ -35,7 +35,7 @@ const UploadPost = () => {
     setLoading(true);
     setMessage('');
 
-    // 1) 地址 → 经纬度
+    
     let lat = null, lng = null;
     try {
       if (formData.address) {
@@ -54,10 +54,10 @@ const UploadPost = () => {
     }
 
     try {
-      // 2) 先把文件发到 /api/upload/image
+      
       const up = await uploadImage(formData.image); // { url, public_id }
 
-      // 3) 再创建帖子
+     
       await createPost({
         name: formData.name,
         description: formData.description,
