@@ -1,38 +1,50 @@
-// client/pages/Login.jsx
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import { API_BASE } from '../api';
+
 function Login() {
-  const [formData, setFormData] = useState({ email: '', password: '' })
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
-      await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        
+        
         body: JSON.stringify(formData),
-      })
-      const data = await res.json()
+      });
+
+      const text = await res.text();
+      let data; try { data = JSON.parse(text); } catch { data = { raw: text }; }
 
       if (!res.ok) {
-        setError(data.message)
-      } else {
-        localStorage.setItem('token', data.token)
-        navigate('/dashboard')
+        setError(data?.message || data?.raw || `Login failed (${res.status})`);
+        return;
       }
+
+      if (data?.token) localStorage.setItem('token', data.token);
+      if (data?.user)  localStorage.setItem('me', JSON.stringify(data.user));
+      navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError('Server error')
+      setError(err.message || 'Server error');
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="login-container">
@@ -45,6 +57,7 @@ function Login() {
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
+            required
           />
           <input
             type="password"
@@ -52,10 +65,13 @@ function Login() {
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
+            required
           />
-          <button type="submit">Login</button>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
-        {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+        {error && <p style={{ color: 'red', marginTop: 10 }}>{error}</p>}
       </div>
     </div>
   );
