@@ -18,9 +18,7 @@ export default function Settings() {
         </button>
       </div>
 
-      {/* 以后要加 Logout 再放到这里 */}
-      {/* <hr className="settings-divider" /> */}
-      {/* <div className="settings-row"> ... </div> */}
+      
     </div>
   );
 }
