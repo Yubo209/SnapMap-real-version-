@@ -186,3 +186,66 @@
 .popup-right::-webkit-scrollbar-track{background:#eef2f7;border-radius:8px;}
 .popup-right::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px;}
 .popup-right::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
+
+
+/* 通用防溢出（手机上最关键） */
+html, body { overflow-x: hidden; }
+.dashboard-container, .dashboard-body, .dashboard-feed { overflow-x: hidden; min-width: 0; }
+.dashboard-feed * { max-width: 100%; }
+
+/* 图片/卡片等超宽时自动缩小 */
+img, video, canvas { max-width: 100%; height: auto; }
+
+/* Leaflet 地图：小屏改用视口高度，避免撑出屏幕 */
+.map-responsive { height: 560px; width: 100%; border-radius: 12px; }
+@media (max-width: 960px) {
+  .map-responsive { height: 60vh !important; }
+}
+
+/* —— 手机与小平板的布局优化 —— */
+@media (max-width: 960px) {
+  /* 顶部吸顶，防止滚动丢失导航 */
+  .dashboard-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 12px 16px;
+    background: var(--card);
+  }
+
+  /* 主体改纵向：侧边栏上移成一排 Tab */
+  .dashboard-body { flex-direction: column; }
+
+  .dashboard-sidebar {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 8px;
+    background: var(--card);
+    position: sticky;
+    top: 56px;                /* 与 header 高度配合 */
+    z-index: 15;
+  }
+
+  .dashboard-sidebar ul {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dashboard-sidebar li {
+    margin: 0;
+    padding: 10px 12px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .dashboard-feed { padding: 12px; }
+
+  .avatar-icon { width: 32px; height: 32px; }
+  .btn { padding: 8px 12px; }
+}
+
+/* 文本过长自动换行，防止撑宽 */
+* { word-wrap: break-word; overflow-wrap: anywhere; }
