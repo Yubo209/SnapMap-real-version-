@@ -1,0 +1,86 @@
+.ab-root {
+  position: relative;
+  min-height: 100svh;
+  background: #0a0a0a;
+}
+
+.ab-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  will-change: background-position;
+}
+
+.ab-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.55) 0%,
+    rgba(0,0,0,0.18) 40%,
+    rgba(0,0,0,0.18) 60%,
+    rgba(0,0,0,0.55) 100%
+  );
+}
+
+.ab-foreground {
+  position: relative;
+  z-index: 1;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.ab-card {
+  width: min(92vw, 460px);
+  padding: 28px;
+  border-radius: 20px;
+  background: rgba(18, 18, 18, 0.6);
+  backdrop-filter: blur(10px) saturate(120%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45),
+              inset 0 1px 0 rgba(255,255,255,0.06);
+  color: #eee;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-bg {
+    animation: none !important;
+  }
+}
+
+.ab-move-x {
+  animation: ab-move-x var(--ab-duration, 40s) linear infinite;
+}
+@keyframes ab-move-x {
+  from { background-position: 0% 0; }
+  to   { background-position: -100% 0; }
+}
+
+.ab-move-x-rev {
+  animation: ab-move-x-rev var(--ab-duration, 40s) linear infinite;
+}
+@keyframes ab-move-x-rev {
+  from { background-position: 0% 0; }
+  to   { background-position: 100% 0; }
+}
+
+.ab-move-y {
+  animation: ab-move-y var(--ab-duration, 40s) linear infinite;
+}
+@keyframes ab-move-y {
+  from { background-position: 0 0%; }
+  to   { background-position: 0 -100%; }
+}
+
+.ab-move-y-rev {
+  animation: ab-move-y-rev var(--ab-duration, 40s) linear infinite;
+}
+@keyframes ab-move-y-rev {
+  from { background-position: 0 0%; }
+  to   { background-position: 0 100%; }
+}
