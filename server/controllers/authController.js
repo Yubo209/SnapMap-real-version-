@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const validator = require('validator');
 
 // 注册用户
 exports.register = async (req, res) => {
@@ -13,7 +14,13 @@ exports.register = async (req, res) => {
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields are required." });
     }
-
+    
+    if (!validator.isEmail(email)) {
+    return res.status(400).json({ message: 'Please enter a valid email.' });
+    }
+  if (password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters.' });
+    }
     // 2. 检查用户是否已存在
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -61,7 +68,12 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-
+    if (!validator.isEmail(email)) {
+    return res.status(400).json({ message: 'Please enter a valid email.' });
+    }
+    if (password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters.' });
+    }
     // 2. 验证密码
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
