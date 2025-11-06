@@ -41,13 +41,17 @@ exports.createPost = async (req, res) => {
 // 获取帖子列表
 exports.getPosts = async (_req, res) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 });
+    const posts = await Post.find()
+      .sort({ createdAt: -1 })
+      .populate('user', 'username avatarUrl');
+
     return res.status(200).json(posts);
   } catch (err) {
     console.error('❌ getPosts error:', err);
     return res.status(500).json({ message: 'Server error fetching posts' });
   }
 };
+
 
 // 获取单个帖子（可选）
 exports.getPostById = async (req, res) => {

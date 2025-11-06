@@ -9,7 +9,7 @@ const photoSchema = new mongoose.Schema({
   },
 
   imageUrl: { type: String, required: true },
-  imagePublicId: { type: String, required: true },   // ✅ 新增：Cloudinary public_id
+  imagePublicId: { type: String, required: true },  
 
   caption: { type: String, default: '' },
   location: { type: String, default: '' },
@@ -24,5 +24,5 @@ const photoSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-photoSchema.index({ createdAt: -1 }); // 可选：列表倒序更快
+photoSchema.index({ createdAt: -1 }); 
 module.exports = mongoose.model('Photo', photoSchema);

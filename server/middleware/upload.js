@@ -11,8 +11,8 @@ const imageOnly = (req, file, cb) => {
 
 const uploadImage = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: imageOnly
-}).single('image'); // 前端字段名：image
+}).single('image'); 
 
 module.exports = { uploadImage };
