@@ -42,13 +42,13 @@ export default function Login() {
 
   return (
     <AuthBackdropLayout
-      imageUrl="/spotmap-logo.svg"   // 你说的文件名
+      imageUrl="/spotmap-logo.svg"   
       duration={36}
       direction="left"
       repeat={true}
-      opacity={0.12}                 // 更淡
+      opacity={0.12}                 
       blur={0}
-      overlay={false}                // 关闭暗遮罩，避免整体太黑
+      overlay={false}                
     >
       <div className="hero-card login-card">
         <h1 className="hero-title">Welcome to SnapMap</h1>

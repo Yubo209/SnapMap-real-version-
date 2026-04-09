@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { API_BASE } from "../api";
+import { usePosts } from "../hooks/usePosts";
 
 const customIcon = new L.Icon({
   iconUrl: "/icons8-map-pin-50.png",
@@ -36,20 +36,28 @@ function FitBoundsOnPosts({ posts, padding = [40, 40], maxZoom = FIT_MAX_ZOOM })
 
 function TwoColContent({ post }) {
   const rightRef = useRef(null);
-  useEffect(() => { if (rightRef.current) rightRef.current.scrollTop = 40; }, []);
+  useEffect(() => {
+    if (rightRef.current) rightRef.current.scrollTop = 40;
+  }, []);
   return (
     <div className="popup-two-col" style={{ height: IMAGE_BOX_H }}>
       <div className="popup-left" style={{ width: LEFT_W }}>
         <div className="popup-image-frame" style={{ height: IMAGE_BOX_H }}>
           {post.imageUrl ? (
-            <img src={post.imageUrl} alt={post.title || post.name || "Spot"} className="popup-image-contain" />
+            <img
+              src={post.imageUrl}
+              alt={post.title || post.name || "Spot"}
+              className="popup-image-contain"
+            />
           ) : (
             <div className="popup-image-placeholder">No Image</div>
           )}
         </div>
       </div>
       <div className="popup-right" ref={rightRef} style={{ maxHeight: IMAGE_BOX_H }}>
-        <p className="popup-coord">📍 <b>{post.lat.toFixed(4)}, {post.lng.toFixed(4)}</b></p>
+        <p className="popup-coord">
+           <b>{post.lat.toFixed(4)}, {post.lng.toFixed(4)}</b>
+        </p>
         {post.description && <p className="popup-desc">{post.description}</p>}
       </div>
     </div>
@@ -84,18 +92,22 @@ function MarkerWithPopup({ post }) {
 }
 
 export default function MapView() {
-  const [posts, setPosts] = useState([]);
-  useEffect(() => {
-    fetch(`${API_BASE}/api/posts`)
-      .then((res) => res.json())
-      .then((data) => {
-        const valid = (data || []).filter((p) => typeof p.lat === "number" && typeof p.lng === "number");
-        setPosts(valid);
-      })
-      .catch((err) => console.error("Error loading posts:", err));
-  }, []);
+  const { posts, isLoading, error } = usePosts();   
 
   const initialCenter = useMemo(() => [39.8283, -98.5795], []);
+
+  if (isLoading) {
+    return <p>Loading map…</p>;
+  }
+
+  if (error) {
+    return <p>Failed to load posts for map.</p>;
+  }
+
+  
+  const valid = (posts || []).filter(
+    (p) => typeof p.lat === "number" && typeof p.lng === "number"
+  );
 
   return (
     <MapContainer
@@ -109,9 +121,10 @@ export default function MapView() {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap contributors"
       />
-      <FitBoundsOnPosts posts={posts} />
-      {posts.map((post, i) => <MarkerWithPopup key={i} post={post} />)}
+      <FitBoundsOnPosts posts={valid} />
+      {valid.map((post, i) => (
+        <MarkerWithPopup key={i} post={post} />
+      ))}
     </MapContainer>
   );
 }
-

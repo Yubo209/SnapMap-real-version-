@@ -2,12 +2,10 @@
 const User = require('../models/User');
 const Photo = require('../models/Photo');
 const Post  = require('../models/Post');
-const cloudinary = require('../lib/cloudinary'); // 用于删旧头像
+const cloudinary = require('../lib/cloudinary'); 
 
-/**
- * GET /api/users/me
- * 需要登录：返回当前用户信息（去掉密码）+ 该用户的 posts
- */
+
+ 
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
@@ -22,10 +20,7 @@ exports.getMe = async (req, res) => {
   }
 };
 
-/**
- * GET /api/users/:id/photos
- * 公开：获取某用户的所有照片
- */
+
 exports.getUserPhotos = async (req, res) => {
   try {
     const photos = await Photo.find({ user: req.params.id }).sort({ createdAt: -1 });
@@ -36,10 +31,7 @@ exports.getUserPhotos = async (req, res) => {
   }
 };
 
-/**
- * GET /api/users/:id/profile
- * 公开：获取用户资料 + 作品（photos）
- */
+
 exports.getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
@@ -54,12 +46,7 @@ exports.getUserProfile = async (req, res) => {
   }
 };
 
-/**
- * PUT /api/users/avatar
- * 需要登录：更新头像
- * 约定：前端已先 /api/upload/image 拿到 { url, public_id }，再把它们传到这里
- * body: { avatarUrl, avatarPublicId }
- */
+
 exports.updateAvatar = async (req, res) => {
   try {
     const { avatarUrl, avatarPublicId } = req.body;
@@ -69,7 +56,7 @@ exports.updateAvatar = async (req, res) => {
 
     const userId = req.user.id;
 
-    // 找旧头像的 publicId，先删旧图（失败忽略）
+    
     const prev = await User.findById(userId).select('avatarPublicId');
     if (prev?.avatarPublicId) {
       try {

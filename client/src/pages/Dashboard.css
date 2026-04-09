@@ -9,6 +9,10 @@
   --radius-lg:28px;
 }
 
+*{
+  box-sizing:border-box;
+}
+
 .dashboard-container{
   height:100vh;
   display:flex;
@@ -56,7 +60,11 @@
 .btn:disabled{opacity:.6;cursor:not-allowed;}
 .btn-ghost{background:#111827;color:#fff;}
 
-.dashboard-body{display:flex;flex:1;}
+.dashboard-body{
+  display:flex;
+  flex:1;
+  min-height:0;
+}
 
 .dashboard-sidebar{
   width:220px;
@@ -89,6 +97,7 @@
   padding:24px;
   overflow-y:auto;
   background:var(--bg);
+  min-width:0;
 }
 
 .section-title{margin:4px 0 16px;font-size:22px;font-weight:800;color:var(--fg);}
@@ -129,9 +138,9 @@
 .settings-desc{color:var(--muted);font-size:.92rem;}
 .settings-divider{border:none;border-top:1px solid var(--border);}
 
-.avatar-icon{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);object-fit:cover;}
+.avatar-icon{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);object-fit:cover;cursor:pointer;}
 
-/* —— Leaflet 弹窗（桌面固定宽） —— */
+
 .leaflet-container .leaflet-popup-content-wrapper{
   background:#fff;
   border-radius:18px;
@@ -140,10 +149,9 @@
 .leaflet-container .leaflet-popup-tip{background:#fff;}
 .leaflet-container .leaflet-popup-content{
   margin:12px 14px!important;
-  width:720px!important;             /* 固定桌面宽度 */
+  width:720px!important;
 }
 
-/* 两栏内容 */
 .popup-two-col{display:flex;gap:16px;min-width:0;}
 .popup-left{flex:0 0 200px;}
 .popup-image-frame{
@@ -173,5 +181,101 @@
 .popup-right::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px;}
 .popup-right::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
 
-/* 地图容器（如 MapView 使用了 className="map-responsive"） */
-.map-responsive{height:560px;width:100%;border-radius:12px;}
+
+.map-responsive{
+  height:560px;
+  width:100%;
+  border-radius:12px;
+}
+
+
+.mobile-bottom-nav{
+  display:none;
+}
+
+
+@media (max-width: 768px){
+  .dashboard-sidebar{
+    display:none;
+  }
+
+  .dashboard-feed{
+    padding:16px;
+    padding-bottom:92px;
+  }
+
+  .section-title{
+    font-size:20px;
+    margin:4px 0 14px;
+  }
+
+  .map-responsive{
+    height:50vh;
+    min-height:320px;
+  }
+
+  .mobile-bottom-nav{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    height:72px;
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    background:var(--card);
+    border-top:1px solid var(--border);
+    box-shadow:0 -4px 16px rgba(0,0,0,.06);
+    z-index:1000;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+
+  .mobile-bottom-nav button{
+    appearance:none;
+    border:none;
+    background:transparent;
+    color:var(--fg);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    font-size:11px;
+    font-weight:600;
+    cursor:pointer;
+    min-width:56px;
+    height:100%;
+    padding:6px 4px;
+  }
+
+  .mobile-bottom-nav button.active{
+    color:#111827;
+  }
+
+  .mobile-bottom-nav button span{
+    line-height:1;
+    font-size:11px;
+  }
+
+
+  .leaflet-container .leaflet-popup-content{
+    width:min(82vw, 320px)!important;
+  }
+
+  .popup-two-col{
+    flex-direction:column;
+  }
+
+  .popup-left{
+    flex:0 0 auto;
+  }
+
+  .popup-image-frame{
+    height:200px;
+  }
+
+  .popup-right{
+    max-height:220px;
+    padding-right:2px;
+  }
+}
