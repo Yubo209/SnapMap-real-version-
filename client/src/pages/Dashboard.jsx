@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
-import UploadPost from '../components/UploadPost';
-import MapView from '../components/MapView';
-import AllSpots from '../components/AllSpots';
+import UploadPost from '../features/posts/components/UploadPost';
+import MapView from '../features/posts/components/MapView';
+import AllSpots from '../features/posts/components/AllSpots';
 import MyProfile from '../pages/MyProfile';
-import { MapPin, Upload, Image, Settings } from 'lucide-react';
+import { MapPin, Upload, Image, Settings, User } from 'lucide-react';
 import { getMe } from '../api';
 import SettingsPage from '../components/Settings';
 
@@ -94,7 +94,7 @@ const Dashboard = () => {
 
       {/* Body */}
       <div className="dashboard-body">
-        {/* Sidebar */}
+        {/* Desktop Sidebar */}
         <nav className="dashboard-sidebar">
           <ul>
             <li className={section === 'map' ? 'active' : ''} onClick={() => setSection('map')}>
@@ -119,6 +119,49 @@ const Dashboard = () => {
         {/* Main */}
         <main className="dashboard-feed">{renderSection()}</main>
       </div>
+
+      {/* Mobile Bottom Bar */}
+      <nav className="mobile-bottom-nav">
+        <button
+          className={section === 'map' ? 'active' : ''}
+          onClick={() => setSection('map')}
+        >
+          <MapPin size={18} />
+          <span>Map</span>
+        </button>
+
+        <button
+          className={section === 'upload' ? 'active' : ''}
+          onClick={() => setSection('upload')}
+        >
+          <Upload size={18} />
+          <span>Upload</span>
+        </button>
+
+        <button
+          className={section === 'posts' ? 'active' : ''}
+          onClick={() => setSection('posts')}
+        >
+          <Image size={18} />
+          <span>AllSpots</span>
+        </button>
+
+        <button
+          className={section === 'settings' ? 'active' : ''}
+          onClick={() => setSection('settings')}
+        >
+          <Settings size={18} />
+          <span>Settings</span>
+        </button>
+
+        <button
+          className={section === 'myprofile' ? 'active' : ''}
+          onClick={() => setSection('myprofile')}
+        >
+          <User size={18} />
+          <span>Profile</span>
+        </button>
+      </nav>
     </div>
   );
 };

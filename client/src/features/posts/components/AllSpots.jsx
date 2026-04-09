@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { getPosts } from '../api';
+import React, { useState } from 'react';
+import { usePosts } from '../hooks/usePosts';  
 
 const AVATAR_FALLBACK = '/default-avatar-icon-of-social-media-user-vector.jpg';
 
@@ -9,22 +9,22 @@ const cardStyle = {
   borderRadius: '12px',
   padding: '1rem',
   marginBottom: '1rem',
-  paddingRight: 130, 
+  paddingRight: 130,
 };
 
 const uploaderBox = {
   position: 'absolute',
   right: 16,
-  top: '15%', 
+  top: '15%',
   transform: 'translateY(-50%)',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   gap: 8,
-  background: 'transparent', 
+  background: 'transparent',
   border: 'none',
   boxShadow: 'none',
-  pointerEvents: 'none', 
+  pointerEvents: 'none',
 };
 
 const nameStyle = {
@@ -46,15 +46,29 @@ const avatarStyle = {
 };
 
 const AllSpots = () => {
-  const [posts, setPosts] = useState([]);
+  
+  const { posts, isLoading, error } = usePosts();
+
   const [search, setSearch] = useState('');
   const [cityFilter, setCityFilter] = useState('All');
 
-  useEffect(() => {
-    getPosts()
-      .then(setPosts)
-      .catch(err => console.error('Error fetching posts:', err));
-  }, []);
+  if (isLoading) {
+    return (
+      <div style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }}>
+        <h2> All Photography Spots</h2>
+        <p>Loading posts…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }}>
+        <h2> All Photography Spots</h2>
+        <p>Failed to load posts.</p>
+      </div>
+    );
+  }
 
   const extractCities = () => {
     const cities = new Set();
@@ -79,11 +93,11 @@ const AllSpots = () => {
 
   return (
     <div style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }}>
-      <h2>📸 All Photography Spots</h2>
+      <h2> All Photography Spots</h2>
 
       <input
         type="text"
-        placeholder="🔍 Search by keyword..."
+        placeholder=" Search by keyword..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem' }}
@@ -107,7 +121,6 @@ const AllSpots = () => {
 
           return (
             <div key={post._id} style={cardStyle}>
-              {}
               <div style={uploaderBox}>
                 <img src={avatarUrl} alt={username} style={avatarStyle} />
                 <div style={nameStyle}>{username}</div>

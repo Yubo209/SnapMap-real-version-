@@ -24,7 +24,7 @@ const MyProfile = () => {
         }
       } catch (err) {
         console.error('Failed to load profile', err);
-        setMessage('❌ Failed to load profile. Please re-login.');
+        setMessage(' Failed to load profile. Please re-login.');
       } finally {
         setLoading(false);
       }
@@ -49,17 +49,17 @@ const MyProfile = () => {
 
       
       setUser(prev => ({ ...prev, avatarUrl: up.url }));
-      setMessage('✅ Avatar updated successfully!');
+      setMessage('Avatar updated successfully!');
 
       
       localStorage.setItem('avatarUrl', up.url);                                      
       window.dispatchEvent(new CustomEvent('avatar-updated', { detail: up.url }));    
     } catch (err) {
       console.error('Avatar update error:', err);
-      setMessage('❌ Failed to update avatar.');
+      setMessage(' Failed to update avatar.');
     } finally {
       setSavingAvatar(false);
-      
+       
       e.target.value = '';
     }
   };
@@ -79,10 +79,10 @@ const MyProfile = () => {
         ...prev,
         posts: (prev.posts || []).filter(p => p._id !== postId)
       }));
-      setMessage('✅ Post deleted.');
+      setMessage(' Post deleted.');
     } catch (err) {
       console.error('Delete post error:', err);
-      setMessage('❌ Failed to delete post.');
+      setMessage(' Failed to delete post.');
     } finally {
       setDeletingId(null);
     }
