@@ -210,40 +210,27 @@ export default function MapView() {
       )}
 
       <MapContainer
-        center={initialCenter}
-        zoom={INITIAL_ZOOM}
-        className="map-responsive modern-map"
-        style={{ height: "560px", width: "100%", borderRadius: 16 }}
-        dragging={true}
-        doubleClickZoom={false}
-        touchZoom={true}
-        keyboard={false}
-        bounceAtZoomLimits={false}
-        zoomSnap={0}
-        scrollWheelZoom={false}
-        smoothWheelZoom={true}
-        smoothSensitivity={8}
-      >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          subdomains="abcd"
-          maxZoom={20}
-        />
+  center={initialCenter}
+  zoom={INITIAL_ZOOM}
+  className="map-responsive modern-map"
+  style={{ height: "560px", width: "100%", borderRadius: 16 }}
+  dragging={true}
+  doubleClickZoom={false}
+  touchZoom={true}
+  keyboard={false}
+  bounceAtZoomLimits={false}
+  zoomSnap={0}
 
-        {userLocation ? (
-          <>
-            <FlyToUserLocation userLocation={userLocation} />
-            <UserMarker userLocation={userLocation} />
-          </>
-        ) : (
-          <FitBoundsOnPosts posts={valid} />
-        )}
+  /* 关键：关掉这些动画 */
+  zoomAnimation={false}
+  fadeAnimation={false}
+  markerZoomAnimation={false}
 
-        {valid.map((post) => (
-          <MarkerWithPopup key={post._id || `${post.lat}-${post.lng}`} post={post} />
-        ))}
-      </MapContainer>
+  /* 你现在这套先保留 */
+  scrollWheelZoom={false}
+  smoothWheelZoom={true}
+  smoothSensitivity={8}
+></MapContainer>
     </div>
   );
 }
