@@ -160,10 +160,12 @@ function MarkerWithPopup({ post }) {
 
 function UserMarker({ userLocation }) {
   const markerRef = useRef(null);
+  const openedOnceRef = useRef(false);
 
   useEffect(() => {
-    if (markerRef.current) {
+    if (markerRef.current && !openedOnceRef.current) {
       markerRef.current.openPopup();
+      openedOnceRef.current = true;
     }
   }, []);
 
@@ -176,7 +178,6 @@ function UserMarker({ userLocation }) {
       <Popup
         className="user-popup"
         closeButton={false}
-        
       >
         <div className="user-popup-content">You are here</div>
       </Popup>
@@ -229,6 +230,9 @@ export default function MapView() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           subdomains="abcd"
           maxZoom={20}
+          keepBuffer={8}
+          updateWhenZooming={false}
+          updateWhenIdle={false}
         />
 
         {userLocation ? (
