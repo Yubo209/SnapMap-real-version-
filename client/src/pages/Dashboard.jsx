@@ -13,7 +13,7 @@ const Dashboard = () => {
   const [avatarUrl, setAvatarUrl] = useState(
     localStorage.getItem('avatarUrl') || '/default-avatar-icon-of-social-media-user-vector.jpg'
   );
-
+ 
   useEffect(() => {
     (async () => {
       try {

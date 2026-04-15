@@ -92,3 +92,8 @@
 .error-text { color: #dc2626; text-align: center; margin-top: 14px; font-size: 14px; }
 
 @media (max-width: 520px) { .hero-card { margin: 3vh auto; } }
+
+
+.field input {
+  font-size: 16px;
+}
