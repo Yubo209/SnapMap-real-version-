@@ -1,151 +1,188 @@
-import React, { useState } from 'react';
-import { usePosts } from '../hooks/usePosts';  
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { usePosts } from "../hooks/usePosts";
+import "../../../style/AllSpots.css";
+const AVATAR_FALLBACK = "/default-avatar-icon-of-social-media-user-vector.jpg";
 
-const AVATAR_FALLBACK = '/default-avatar-icon-of-social-media-user-vector.jpg';
+function extractCityFromAddress(address = "") {
+  const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    return parts[parts.length - 2];
+  }
+  return "Unknown";
+}
 
-const cardStyle = {
-  position: 'relative',
-  border: '1px solid #ddd',
-  borderRadius: '12px',
-  padding: '1rem',
-  marginBottom: '1rem',
-  paddingRight: 130,
-};
-
-const uploaderBox = {
-  position: 'absolute',
-  right: 16,
-  top: '15%',
-  transform: 'translateY(-50%)',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: 8,
-  background: 'transparent',
-  border: 'none',
-  boxShadow: 'none',
-  pointerEvents: 'none',
-};
-
-const nameStyle = {
-  fontWeight: 600,
-  fontSize: 14,
-  color: '#111827',
-  whiteSpace: 'nowrap',
-  maxWidth: 110,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  textAlign: 'center',
-};
-
-const avatarStyle = {
-  width: 44,
-  height: 44,
-  borderRadius: '50%',
-  objectFit: 'cover',
-};
-
-const AllSpots = () => {
-  
+export default function AllSpots() {
   const { posts, isLoading, error } = usePosts();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-  const [search, setSearch] = useState('');
-  const [cityFilter, setCityFilter] = useState('All');
+  const cityFromUrl = searchParams.get("city") || "All";
+  const keywordFromUrl = searchParams.get("q") || "";
+
+  const [search, setSearch] = useState(keywordFromUrl);
+  const [cityFilter, setCityFilter] = useState(cityFromUrl);
+
+  useEffect(() => {
+    setSearch(keywordFromUrl);
+    setCityFilter(cityFromUrl);
+  }, [cityFromUrl, keywordFromUrl]);
+
+  const cityOptions = useMemo(() => {
+    const cities = new Set();
+
+    (posts || []).forEach((post) => {
+      const city = extractCityFromAddress(post.address || "");
+      if (city && city !== "Unknown") {
+        cities.add(city);
+      }
+    });
+
+    return ["All", ...Array.from(cities).sort()];
+  }, [posts]);
+
+  const filteredPosts = useMemo(() => {
+    return (posts || []).filter((post) => {
+      const name = (post.name || "").toLowerCase();
+      const desc = (post.description || "").toLowerCase();
+      const address = (post.address || "").toLowerCase();
+      const city = extractCityFromAddress(post.address || "");
+
+      const q = search.trim().toLowerCase();
+
+      const matchKeyword =
+        !q || name.includes(q) || desc.includes(q) || address.includes(q);
+
+      const matchCity =
+        cityFilter === "All" || city === cityFilter;
+
+      return matchKeyword && matchCity;
+    });
+  }, [posts, search, cityFilter]);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+
+    const next = new URLSearchParams(searchParams);
+    if (value.trim()) {
+      next.set("q", value);
+    } else {
+      next.delete("q");
+    }
+    setSearchParams(next);
+  };
+
+  const handleCityChange = (e) => {
+    const value = e.target.value;
+    setCityFilter(value);
+
+    const next = new URLSearchParams(searchParams);
+    if (value !== "All") {
+      next.set("city", value);
+    } else {
+      next.delete("city");
+    }
+    setSearchParams(next);
+  };
 
   if (isLoading) {
     return (
-      <div style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }}>
-        <h2> All Photography Spots</h2>
-        <p>Loading posts…</p>
+      <div className="allspots-page">
+        <h2 className="allspots-title">All Photography Spots</h2>
+        <p>Loading posts...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }}>
-        <h2> All Photography Spots</h2>
+      <div className="allspots-page">
+        <h2 className="allspots-title">All Photography Spots</h2>
         <p>Failed to load posts.</p>
       </div>
     );
   }
 
-  const extractCities = () => {
-    const cities = new Set();
-    posts.forEach(post => {
-      const addr = post.address || '';
-      const parts = addr.split(',');
-      if (parts.length >= 2) cities.add(parts[parts.length - 2].trim());
-    });
-    return ['All', ...Array.from(cities)];
-  };
-
-  const filteredPosts = posts.filter(post => {
-    const name = post.name?.toLowerCase() || '';
-    const desc = post.description?.toLowerCase() || '';
-    const address = post.address?.toLowerCase() || '';
-    const q = search.toLowerCase();
-
-    const matchKeyword = name.includes(q) || desc.includes(q) || address.includes(q);
-    const matchCity = cityFilter === 'All' || (post.address && post.address.includes(cityFilter));
-    return matchKeyword && matchCity;
-  });
-
   return (
-    <div style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }}>
-      <h2> All Photography Spots</h2>
+    <div className="allspots-page">
+      <div className="allspots-header">
+        <div>
+          <h2 className="allspots-title">All Photography Spots</h2>
+          <p className="allspots-subtitle">
+            Explore photo spots shared by the community.
+          </p>
+        </div>
+      </div>
 
-      <input
-        type="text"
-        placeholder=" Search by keyword..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem' }}
-      />
+      <div className="allspots-controls">
+        <input
+          type="text"
+          placeholder="Search by name, description, or address..."
+          value={search}
+          onChange={handleSearchChange}
+          className="allspots-search"
+        />
 
-      <select
-        value={cityFilter}
-        onChange={(e) => setCityFilter(e.target.value)}
-        style={{ marginBottom: '1rem', padding: '0.5rem' }}
-      >
-        {extractCities().map((city, idx) => (
-          <option key={idx} value={city}>{city}</option>
-        ))}
-      </select>
+        <select
+          value={cityFilter}
+          onChange={handleCityChange}
+          className="allspots-select"
+        >
+          {cityOptions.map((city) => (
+            <option key={city} value={city}>
+              {city}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {filteredPosts.length > 0 ? (
-        filteredPosts.map(post => {
-          const author = post.user || {};
-          const username = author.username || 'Unknown';
-          const avatarUrl = author.avatarUrl || AVATAR_FALLBACK;
+        <div className="allspots-grid">
+          {filteredPosts.map((post) => {
+            const author = post.user || {};
+            const username = author.username || "Unknown";
+            const avatarUrl = author.avatarUrl || AVATAR_FALLBACK;
+            const city = extractCityFromAddress(post.address || "");
 
-          return (
-            <div key={post._id} style={cardStyle}>
-              <div style={uploaderBox}>
-                <img src={avatarUrl} alt={username} style={avatarStyle} />
-                <div style={nameStyle}>{username}</div>
-              </div>
+            return (
+              <button
+                key={post._id}
+                className="spot-card"
+                onClick={() => navigate(`/spots/${post._id}`)}
+              >
+                <div className="spot-card-image-wrap">
+                  {post.imageUrl ? (
+                    <img
+                      src={post.imageUrl}
+                      alt={post.name || "Spot"}
+                      className="spot-card-image"
+                    />
+                  ) : (
+                    <div className="spot-card-placeholder">No Image</div>
+                  )}
+                </div>
 
-              <h3>{post.name}</h3>
-              <p><strong>Description:</strong> {post.description}</p>
-              <p><strong>Address:</strong> {post.address}</p>
-              <p><strong>Coordinates:</strong> {post.lat}, {post.lng}</p>
+                <div className="spot-card-body">
+                  <h3 className="spot-card-title">{post.name || "Untitled Spot"}</h3>
+                  <p className="spot-card-city">{city}</p>
 
-              {post.imageUrl && (
-                <img
-                  src={post.imageUrl}
-                  alt="Spot"
-                  style={{ maxWidth: '47%', marginTop: '0.5rem', borderRadius: '6px' }}
-                />
-              )}
-            </div>
-          );
-        })
+                  <div className="spot-card-author">
+                    <img
+                      src={avatarUrl}
+                      alt={username}
+                      className="spot-card-avatar"
+                    />
+                    <span className="spot-card-username">{username}</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       ) : (
         <p>No matching posts found.</p>
       )}
     </div>
   );
-};
-
-export default AllSpots;
+}
