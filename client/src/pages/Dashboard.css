@@ -30,6 +30,7 @@
   background:var(--card);
   border-bottom:1px solid var(--border);
   box-shadow:0 2px 18px rgba(0,0,0,.04);
+  flex-shrink:0;
 }
 
 .brand{
@@ -71,6 +72,7 @@
   background:var(--card);
   border-right:1px solid var(--border);
   padding:20px 14px;
+  flex-shrink:0;
 }
 
 .dashboard-sidebar ul{list-style:none;padding:0;margin:0;}
@@ -94,13 +96,40 @@
 
 .dashboard-feed{
   flex:1;
-  padding:24px;
+  padding:16px 20px 16px;
   overflow-y:auto;
   background:var(--bg);
   min-width:0;
+  min-height:0;
 }
 
-.section-title{margin:4px 0 16px;font-size:22px;font-weight:800;color:var(--fg);}
+.section-title{
+  margin:4px 0 10px;
+  font-size:22px;
+  font-weight:800;
+  color:var(--fg);
+}
+
+
+.dashboard-feed--map{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  height:100%;
+}
+
+.dashboard-map-section{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:0;
+  width:100%;
+}
+
+.dashboard-map-section .section-title{
+  margin:4px 0 0px;
+  flex-shrink:0;
+}
 
 .upload-form label{display:block;margin-top:1rem;font-weight:600;color:var(--fg);}
 .upload-form input[type="text"],
@@ -139,7 +168,6 @@
 .settings-divider{border:none;border-top:1px solid var(--border);}
 
 .avatar-icon{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);object-fit:cover;cursor:pointer;}
-
 
 .leaflet-container .leaflet-popup-content-wrapper{
   background:#fff;
@@ -181,18 +209,16 @@
 .popup-right::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px;}
 .popup-right::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
 
-
+/* 旧规则留着无所谓，但 MapView 不再依赖它 */
 .map-responsive{
   height:560px;
   width:100%;
   border-radius:12px;
 }
 
-
 .mobile-bottom-nav{
   display:none;
 }
-
 
 @media (max-width: 768px){
   .dashboard-sidebar{
@@ -200,18 +226,25 @@
   }
 
   .dashboard-feed{
-    padding:16px;
-    padding-bottom:92px;
+    padding:12px 14px 84px;
   }
 
   .section-title{
     font-size:20px;
-    margin:4px 0 14px;
+    margin:4px 0 8px;
   }
 
-  .map-responsive{
-    height:50vh;
-    min-height:320px;
+  .dashboard-feed--map{
+    min-height:0;
+    height:100%;
+  }
+
+  .dashboard-map-section{
+    min-height:0;
+  }
+
+  .dashboard-map-section .section-title{
+    margin:4px 0 6px;
   }
 
   .mobile-bottom-nav{
@@ -256,7 +289,6 @@
     line-height:1;
     font-size:11px;
   }
-
 
   .leaflet-container .leaflet-popup-content{
     width:min(82vw, 320px)!important;

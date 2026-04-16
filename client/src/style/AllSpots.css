@@ -146,3 +146,72 @@
     font-size: 14px;
   }
 }
+
+
+.mapview-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.mapview-page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.nearby-spots-badge {
+  border: none;
+  background: #111827;
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.nearby-spots-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
+}
+
+.nearby-spots-badge:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .mapview-topbar {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .mapview-page-title {
+    font-size: 22px;
+  }
+
+  .nearby-spots-badge {
+    font-size: 13px;
+    padding: 9px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mapview-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nearby-spots-badge {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
