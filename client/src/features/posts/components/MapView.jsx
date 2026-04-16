@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import "@luomus/leaflet-smooth-wheel-zoom";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { useNavigate } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 import "../../../style/mapview.css";
 import { usePosts } from "../hooks/usePosts";
@@ -26,6 +27,31 @@ const POPUP_MAX_WIDTH = 880;
 const INITIAL_ZOOM = 3;
 const FIT_MAX_ZOOM = 3;
 const USER_ZOOM = 11;
+const NEARBY_RADIUS_KM = 80;
+
+function getDistanceKm(lat1, lng1, lat2, lng2) {
+  const toRad = (value) => (value * Math.PI) / 180;
+
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function extractCityFromAddress(address = "") {
+  const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+  if (parts.length >= 2) return parts[parts.length - 2];
+  return "";
+}
 
 function FitBoundsOnPosts({ posts, padding = [40, 40], maxZoom = FIT_MAX_ZOOM }) {
   const map = useMap();
@@ -56,6 +82,38 @@ function FlyToUserLocation({ userLocation }) {
       duration: 1.2,
     });
   }, [userLocation, map]);
+
+  return null;
+}
+
+function MapResizeFix() {
+  const map = useMap();
+
+  useEffect(() => {
+    const refresh = () => {
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 0);
+    };
+
+    refresh();
+    window.addEventListener("resize", refresh);
+
+    const parent = map.getContainer().parentElement;
+    let observer;
+
+    if (parent && typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(() => {
+        refresh();
+      });
+      observer.observe(parent);
+    }
+
+    return () => {
+      window.removeEventListener("resize", refresh);
+      if (observer) observer.disconnect();
+    };
+  }, [map]);
 
   return null;
 }
@@ -175,10 +233,7 @@ function UserMarker({ userLocation }) {
       icon={userIcon}
       ref={markerRef}
     >
-      <Popup
-        className="user-popup"
-        closeButton={false}
-      >
+      <Popup className="user-popup" closeButton={false}>
         <div className="user-popup-content">You are here</div>
       </Popup>
     </Marker>
@@ -188,8 +243,47 @@ function UserMarker({ userLocation }) {
 export default function MapView() {
   const { posts, isLoading, error } = usePosts();
   const { userLocation, locationLoading, locationError } = useUserLocation();
+  const navigate = useNavigate();
 
   const initialCenter = useMemo(() => [39.8283, -98.5795], []);
+
+  const valid = useMemo(
+    () =>
+      (posts || []).filter(
+        (p) => typeof p.lat === "number" && typeof p.lng === "number"
+      ),
+    [posts]
+  );
+
+  const nearbyPosts = useMemo(() => {
+    if (!userLocation || !valid.length) return [];
+
+    return valid.filter((post) => {
+      const distance = getDistanceKm(
+        userLocation.lat,
+        userLocation.lng,
+        post.lat,
+        post.lng
+      );
+      return distance <= NEARBY_RADIUS_KM;
+    });
+  }, [userLocation, valid]);
+
+  const nearbyCity = useMemo(() => {
+    if (!nearbyPosts.length) return "";
+    return extractCityFromAddress(nearbyPosts[0].address || "");
+  }, [nearbyPosts]);
+
+  const handleNearbyJump = () => {
+    const params = new URLSearchParams();
+
+    if (nearbyCity) {
+      params.set("city", nearbyCity);
+      params.set("q", nearbyCity);
+    }
+
+    navigate(`/allspots${params.toString() ? `?${params.toString()}` : ""}`);
+  };
 
   if (isLoading) {
     return <p>Loading map...</p>;
@@ -199,56 +293,72 @@ export default function MapView() {
     return <p>Failed to load posts for map.</p>;
   }
 
-  const valid = (posts || []).filter(
-    (p) => typeof p.lat === "number" && typeof p.lng === "number"
-  );
-
   return (
     <div className="mapview-wrapper">
+      <div className="mapview-topbar mapview-topbar--actions">
+        <div className="mapview-topbar-spacer" />
+
+        {!!userLocation && (
+          <button
+            className="nearby-spots-badge"
+            onClick={handleNearbyJump}
+            type="button"
+          >
+            {nearbyCity
+              ? `${nearbyPosts.length} spots near ${nearbyCity}`
+              : `${nearbyPosts.length} spots within 80 km`}
+          </button>
+        )}
+      </div>
+
       {locationLoading && <p className="map-status">Locating you...</p>}
       {!locationLoading && locationError && (
         <p className="map-status map-status-muted">{locationError}</p>
       )}
 
-      <MapContainer
-        center={initialCenter}
-        zoom={INITIAL_ZOOM}
-        className="map-responsive modern-map"
-        style={{ height: "560px", width: "100%", borderRadius: 16 }}
-        dragging={true}
-        doubleClickZoom={false}
-        touchZoom={true}
-        keyboard={false}
-        bounceAtZoomLimits={false}
-        zoomSnap={0}
-        scrollWheelZoom={false}
-        smoothWheelZoom={true}
-        smoothSensitivity={8}
-      >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          subdomains="abcd"
-          maxZoom={20}
-          keepBuffer={20}
-          maxNativeZoom={20}
-          updateWhenZooming={true}
-          updateWhenIdle={true}
-        />
+      <div className="mapview-stage">
+        <MapContainer
+          center={initialCenter}
+          zoom={INITIAL_ZOOM}
+          className="modern-map"
+          style={{ width: "100%", height: "100%", borderRadius: 16 }}
+          dragging={true}
+          doubleClickZoom={false}
+          touchZoom={true}
+          keyboard={false}
+          bounceAtZoomLimits={false}
+          zoomSnap={0}
+          scrollWheelZoom={false}
+          smoothWheelZoom={true}
+          smoothSensitivity={8}
+        >
+          <MapResizeFix />
 
-        {userLocation ? (
-          <>
-            <FlyToUserLocation userLocation={userLocation} />
-            <UserMarker userLocation={userLocation} />
-          </>
-        ) : (
-          <FitBoundsOnPosts posts={valid} />
-        )}
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            subdomains="abcd"
+            maxZoom={20}
+            keepBuffer={20}
+            maxNativeZoom={20}
+            updateWhenZooming={true}
+            updateWhenIdle={true}
+          />
 
-        {valid.map((post) => (
-          <MarkerWithPopup key={post._id || `${post.lat}-${post.lng}`} post={post} />
-        ))}
-      </MapContainer>
+          {userLocation ? (
+            <>
+              <FlyToUserLocation userLocation={userLocation} />
+              <UserMarker userLocation={userLocation} />
+            </>
+          ) : (
+            <FitBoundsOnPosts posts={valid} />
+          )}
+
+          {valid.map((post) => (
+            <MarkerWithPopup key={post._id || `${post.lat}-${post.lng}`} post={post} />
+          ))}
+        </MapContainer>
+      </div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ const Dashboard = () => {
   const [avatarUrl, setAvatarUrl] = useState(
     localStorage.getItem('avatarUrl') || '/default-avatar-icon-of-social-media-user-vector.jpg'
   );
- 
+
   useEffect(() => {
     (async () => {
       try {
@@ -42,10 +42,10 @@ const Dashboard = () => {
     switch (section) {
       case 'map':
         return (
-          <>
-            <h2 className="section-title">Map View</h2>
+          <div className="dashboard-map-section">
+            
             <MapView />
-          </>
+          </div>
         );
       case 'upload':
         return (
@@ -57,7 +57,7 @@ const Dashboard = () => {
       case 'posts':
         return (
           <>
-            <h2 className="section-title">All Photography Spots</h2>
+            
             <AllSpots />
           </>
         );
@@ -72,7 +72,6 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Header */}
       <header className="dashboard-header">
         <div className="brand" onClick={() => setSection('map')}>
           <img src="/spotmap-icon.svg" alt="SpotMap" className="brand-icon" />
@@ -92,9 +91,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Body */}
       <div className="dashboard-body">
-        {/* Desktop Sidebar */}
         <nav className="dashboard-sidebar">
           <ul>
             <li className={section === 'map' ? 'active' : ''} onClick={() => setSection('map')}>
@@ -116,11 +113,11 @@ const Dashboard = () => {
           </ul>
         </nav>
 
-        {/* Main */}
-        <main className="dashboard-feed">{renderSection()}</main>
+        <main className={`dashboard-feed ${section === 'map' ? 'dashboard-feed--map' : ''}`}>
+          {renderSection()}
+        </main>
       </div>
 
-      {/* Mobile Bottom Bar */}
       <nav className="mobile-bottom-nav">
         <button
           className={section === 'map' ? 'active' : ''}
