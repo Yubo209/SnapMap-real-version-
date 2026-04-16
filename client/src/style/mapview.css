@@ -19,7 +19,7 @@
 
 .mapview-stage {
   width: 100%;
-  height: clamp(420px, 60vh, 700px);
+  height: clamp(480px, 68vh, 820px);
   min-height: 420px;
   max-height: 700px;
   border-radius: 16px;
