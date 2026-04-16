@@ -306,7 +306,7 @@ export default function MapView() {
           >
             {nearbyCity
               ? `${nearbyPosts.length} spots near ${nearbyCity}`
-              : `${nearbyPosts.length} spots within 80 km`}
+              : `${nearbyPosts.length} photography spots within 80 km`}
           </button>
         )}
       </div>
