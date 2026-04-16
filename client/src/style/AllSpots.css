@@ -1,0 +1,148 @@
+.allspots-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+.allspots-header {
+  margin-bottom: 20px;
+}
+
+.allspots-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.allspots-subtitle {
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.allspots-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.allspots-search,
+.allspots-select {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 16px;
+  background: #fff;
+}
+
+.allspots-search {
+  flex: 1;
+  min-width: 240px;
+}
+
+.allspots-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.spot-card {
+  border: none;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.spot-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+}
+
+.spot-card-image-wrap {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: #f3f4f6;
+}
+
+.spot-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.spot-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #9ca3af;
+}
+
+.spot-card-body {
+  padding: 12px;
+}
+
+.spot-card-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.35;
+}
+
+.spot-card-city {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.spot-card-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spot-card-avatar {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+.spot-card-username {
+  font-size: 13px;
+  color: #374151;
+}
+
+@media (max-width: 900px) {
+  .allspots-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .allspots-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .allspots-title {
+    font-size: 26px;
+  }
+
+  .spot-card-title {
+    font-size: 14px;
+  }
+}
