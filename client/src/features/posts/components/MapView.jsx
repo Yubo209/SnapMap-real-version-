@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import "@luomus/leaflet-smooth-wheel-zoom";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import "leaflet/dist/leaflet.css";
 import "../../../style/mapview.css";
 import { usePosts } from "../hooks/usePosts";
@@ -23,15 +23,14 @@ const userIcon = new L.Icon({
 });
 
 const POPUP_MAX_WIDTH = 880;
-
 const INITIAL_ZOOM = 3;
 const FIT_MAX_ZOOM = 3;
 const USER_ZOOM = 11;
 const NEARBY_RADIUS_KM = 80;
+const FOCUS_ZOOM = 14;
 
 function getDistanceKm(lat1, lng1, lat2, lng2) {
   const toRad = (value) => (value * Math.PI) / 180;
-
   const R = 6371;
   const dLat = toRad(lat2 - lat1);
   const dLng = toRad(lng2 - lng1);
@@ -72,7 +71,7 @@ function FitBoundsOnPosts({ posts, padding = [40, 40], maxZoom = FIT_MAX_ZOOM })
   return null;
 }
 
-function FlyToUserLocation({ userLocation }) {
+function FlyToUserLocation({ userLocation, triggerKey }) {
   const map = useMap();
 
   useEffect(() => {
@@ -81,7 +80,7 @@ function FlyToUserLocation({ userLocation }) {
     map.flyTo([userLocation.lat, userLocation.lng], USER_ZOOM, {
       duration: 1.2,
     });
-  }, [userLocation, map]);
+  }, [userLocation, triggerKey, map]);
 
   return null;
 }
@@ -166,40 +165,39 @@ function TwoColContent({ post }) {
   );
 }
 
-function MarkerWithPopup({ post }) {
+function MarkerWithPopup({ post, shouldOpen }) {
   const map = useMap();
-  const previousViewRef = useRef(null);
+  const markerRef = useRef(null);
+
+  useEffect(() => {
+    if (!shouldOpen || !markerRef.current) return;
+
+    map.flyTo([post.lat, post.lng], FOCUS_ZOOM, {
+      animate: true,
+      duration: 1,
+    });
+
+    const timer = setTimeout(() => {
+      if (markerRef.current) {
+        markerRef.current.openPopup();
+      }
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [shouldOpen, map, post]);
 
   return (
     <Marker
       position={[post.lat, post.lng]}
       icon={customIcon}
+      ref={markerRef}
       eventHandlers={{
         click: (e) => {
-          previousViewRef.current = {
-            center: map.getCenter(),
-            zoom: map.getZoom(),
-          };
-
           map.panTo([post.lat, post.lng], {
             animate: true,
             duration: 0.6,
           });
-
           e.target.openPopup();
-        },
-
-        popupclose: () => {
-          if (!previousViewRef.current) return;
-
-          const { center, zoom } = previousViewRef.current;
-
-          map.flyTo(center, zoom, {
-            animate: true,
-            duration: 0.5,
-          });
-
-          previousViewRef.current = null;
         },
       }}
     >
@@ -243,7 +241,10 @@ function UserMarker({ userLocation }) {
 export default function MapView() {
   const { posts, isLoading, error } = usePosts();
   const { userLocation, locationLoading, locationError } = useUserLocation();
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const focusPostId = searchParams.get("focusPost") || "";
+  const resetKeyRef = useRef(0);
 
   const initialCenter = useMemo(() => [39.8283, -98.5795], []);
 
@@ -254,6 +255,11 @@ export default function MapView() {
       ),
     [posts]
   );
+
+  const focusedPost = useMemo(() => {
+    if (!focusPostId) return null;
+    return valid.find((post) => post._id === focusPostId) || null;
+  }, [focusPostId, valid]);
 
   const nearbyPosts = useMemo(() => {
     if (!userLocation || !valid.length) return [];
@@ -276,13 +282,22 @@ export default function MapView() {
 
   const handleNearbyJump = () => {
     const params = new URLSearchParams();
+    params.set("section", "posts");
 
     if (nearbyCity) {
       params.set("city", nearbyCity);
       params.set("q", nearbyCity);
     }
 
-    navigate(`/allspots${params.toString() ? `?${params.toString()}` : ""}`);
+    setSearchParams(params);
+  };
+
+  const handleResetToMyLocation = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set("section", "map");
+    next.delete("focusPost");
+    setSearchParams(next);
+    resetKeyRef.current += 1;
   };
 
   if (isLoading) {
@@ -295,21 +310,27 @@ export default function MapView() {
 
   return (
     <div className="mapview-wrapper">
-      <div className="mapview-topbar mapview-topbar--actions">
-        <div className="mapview-topbar-spacer" />
-
-        {!!userLocation && (
+      {!!userLocation && (
+        <div className="map-action-row">
           <button
-            className="nearby-spots-badge"
-            onClick={handleNearbyJump}
             type="button"
+            className="map-chip map-chip--small"
+            onClick={handleResetToMyLocation}
+          >
+            My Location
+          </button>
+
+          <button
+            type="button"
+            className="map-chip map-chip--large"
+            onClick={handleNearbyJump}
           >
             {nearbyCity
               ? `${nearbyPosts.length} spots near ${nearbyCity}`
-              : `${nearbyPosts.length} photography spots within 80 km`}
+              : `${nearbyPosts.length} photography spots nearby`}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {locationLoading && <p className="map-status">Locating you...</p>}
       {!locationLoading && locationError && (
@@ -331,6 +352,7 @@ export default function MapView() {
           scrollWheelZoom={false}
           smoothWheelZoom={true}
           smoothSensitivity={8}
+          zoomControl={false}
         >
           <MapResizeFix />
 
@@ -345,17 +367,24 @@ export default function MapView() {
             updateWhenIdle={true}
           />
 
-          {userLocation ? (
+          {!focusedPost && userLocation ? (
             <>
-              <FlyToUserLocation userLocation={userLocation} />
+              <FlyToUserLocation
+                userLocation={userLocation}
+                triggerKey={`${focusPostId}-${resetKeyRef.current}`}
+              />
               <UserMarker userLocation={userLocation} />
             </>
-          ) : (
+          ) : !focusedPost ? (
             <FitBoundsOnPosts posts={valid} />
-          )}
+          ) : null}
 
           {valid.map((post) => (
-            <MarkerWithPopup key={post._id || `${post.lat}-${post.lng}`} post={post} />
+            <MarkerWithPopup
+              key={post._id || `${post.lat}-${post.lng}`}
+              post={post}
+              shouldOpen={focusPostId === post._id}
+            />
           ))}
         </MapContainer>
       </div>

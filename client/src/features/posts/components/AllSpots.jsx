@@ -1,21 +1,26 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { usePosts } from "../hooks/usePosts";
 import "../../../style/AllSpots.css";
+
 const AVATAR_FALLBACK = "/default-avatar-icon-of-social-media-user-vector.jpg";
 
 function extractCityFromAddress(address = "") {
-  const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+  const parts = address
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
   if (parts.length >= 2) {
     return parts[parts.length - 2];
   }
+
   return "Unknown";
 }
 
-export default function AllSpots() {
+export default function AllSpots({ onOpenPost }) {
   const { posts, isLoading, error } = usePosts();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   const cityFromUrl = searchParams.get("city") || "All";
   const keywordFromUrl = searchParams.get("q") || "";
@@ -47,14 +52,12 @@ export default function AllSpots() {
       const desc = (post.description || "").toLowerCase();
       const address = (post.address || "").toLowerCase();
       const city = extractCityFromAddress(post.address || "");
-
       const q = search.trim().toLowerCase();
 
       const matchKeyword =
         !q || name.includes(q) || desc.includes(q) || address.includes(q);
 
-      const matchCity =
-        cityFilter === "All" || city === cityFilter;
+      const matchCity = cityFilter === "All" || city === cityFilter;
 
       return matchKeyword && matchCity;
     });
@@ -148,8 +151,9 @@ export default function AllSpots() {
             return (
               <button
                 key={post._id}
+                type="button"
                 className="spot-card"
-                onClick={() => navigate(`/spots/${post._id}`)}
+                onClick={() => onOpenPost(post._id)}
               >
                 <div className="spot-card-image-wrap">
                   {post.imageUrl ? (
@@ -164,7 +168,10 @@ export default function AllSpots() {
                 </div>
 
                 <div className="spot-card-body">
-                  <h3 className="spot-card-title">{post.name || "Untitled Spot"}</h3>
+                  <h3 className="spot-card-title">
+                    {post.name || "Untitled Spot"}
+                  </h3>
+
                   <p className="spot-card-city">{city}</p>
 
                   <div className="spot-card-author">

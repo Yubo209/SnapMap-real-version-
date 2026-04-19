@@ -34,49 +34,61 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
-/* top action row */
-.mapview-topbar {
+/* 新的按钮行：不再用旧类名 */
+.map-action-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: flex-start;
+  gap: 10px;
   margin-bottom: 10px;
-  flex-wrap: wrap;
-  flex-shrink: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.mapview-topbar--actions {
-  justify-content: flex-end;
+.map-action-row::-webkit-scrollbar {
+  display: none;
 }
 
-.mapview-topbar-spacer {
-  flex: 1;
-}
-
-.nearby-spots-badge {
+.map-chip {
   border: none;
   background: #111827;
   color: #ffffff;
   border-radius: 999px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 
-.nearby-spots-badge:hover {
+.map-chip:hover {
   transform: translateY(-1px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
 }
 
-.nearby-spots-badge:active {
+.map-chip:active {
   transform: translateY(0);
 }
 
-/* Popup shell */
+.map-chip--small {
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.map-chip--large {
+  padding: 10px 18px;
+  font-size: 14px;
+  max-width: 100%;
+}
+
+/* 去掉地图左上角 zoom + / - */
+.mapview-wrapper .leaflet-control-zoom {
+  display: none !important;
+}
+
+/* Popup 外壳 */
 .mapview-wrapper .leaflet-popup-content-wrapper {
   border-radius: 20px;
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
@@ -94,7 +106,7 @@
   box-shadow: none;
 }
 
-/* Close button */
+/* Popup 关闭按钮 */
 .mapview-wrapper .leaflet-popup-close-button {
   top: 14px !important;
   right: 14px !important;
@@ -120,14 +132,13 @@
   transform: scale(1.04);
 }
 
-/* Card */
+/* Popup Card */
 .popup-card {
   display: flex;
   flex-direction: column;
   background: #ffffff;
 }
 
-/* Header */
 .popup-header {
   padding: 20px 68px 14px 40px;
   border-bottom: 1px solid #eef2f7;
@@ -143,7 +154,6 @@
   overflow-wrap: anywhere;
 }
 
-/* Body */
 .popup-body {
   display: flex;
   gap: 20px;
@@ -240,16 +250,24 @@
   width: 8px;
   height: 8px;
 }
+.leaflet-control-container {
+  display: none !important;
+}
 
+
+.leaflet-control-attribution {
+  display: none !important;
+}
 /* Tablet */
 @media (max-width: 768px) {
-  .mapview-topbar {
-    margin-bottom: 10px;
+  .map-chip--small {
+    padding: 9px 12px;
+    font-size: 12px;
   }
 
-  .nearby-spots-badge {
-    font-size: 13px;
+  .map-chip--large {
     padding: 9px 14px;
+    font-size: 13px;
   }
 
   .mapview-stage {
@@ -304,21 +322,20 @@
   }
 }
 
-/* iPhone / small phones */
+/* Small phones */
 @media (max-width: 480px) {
-  .mapview-topbar {
-    justify-content: stretch;
-    flex-direction: column;
-    align-items: flex-start;
+  .map-action-row {
+    gap: 8px;
   }
 
-  .mapview-topbar-spacer {
-    display: none;
+  .map-chip--small {
+    padding: 8px 10px;
+    font-size: 12px;
   }
 
-  .nearby-spots-badge {
-    width: 100%;
-    text-align: center;
+  .map-chip--large {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 
   .mapview-stage {
@@ -356,4 +373,15 @@
   .popup-coord {
     font-size: 13px;
   }
+
+
+
+.leaflet-control-container {
+  display: none !important;
+}
+
+
+.leaflet-control-attribution {
+  display: none !important;
+}
 }
