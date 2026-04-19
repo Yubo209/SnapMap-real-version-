@@ -13,9 +13,7 @@ export default function PostModal({ post, onClose }) {
     document.body.style.overflow = "hidden";
 
     const handleEsc = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+      if (e.key === "Escape") onClose();
     };
 
     window.addEventListener("keydown", handleEsc);
@@ -95,10 +93,9 @@ export default function PostModal({ post, onClose }) {
             </div>
 
             <div className="modal-actions">
-              <button className="modal-action-btn">♡ Like</button>
-              <button className="modal-action-btn"> Comment</button>
-              <button className="modal-action-btn"> Save</button>
-
+              <button className="modal-action-btn" type="button">♡ Like</button>
+              <button className="modal-action-btn" type="button">Comment</button>
+              <button className="modal-action-btn" type="button">Save</button>
               <button
                 className="modal-action-btn modal-action-btn--map"
                 onClick={handleViewOnMap}
