@@ -121,9 +121,39 @@
   flex-shrink: 0;
 }
 
+.spot-card-author-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
 .spot-card-username {
   font-size: 13px;
   color: #374151;
+}
+
+.spot-card-like-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+  white-space: nowrap;
+  color: #111827;
+}
+
+.spot-card-like-icon {
+  font-size: 18px;   /* 以后想改爱心大小，改这里 */
+  line-height: 1;
+  color: #111827;
+}
+
+.spot-card-like-number {
+  font-size: 14px;   /* 以后想改数字大小，改这里 */
+  font-weight: 600;
+  line-height: 1;
+  color: #111827;
 }
 
 @media (max-width: 900px) {
@@ -145,8 +175,19 @@
   .spot-card-title {
     font-size: 14px;
   }
-}
 
+  .spot-card-author-meta {
+    gap: 6px;
+  }
+
+  .spot-card-like-icon {
+    font-size: 15px;
+  }
+
+  .spot-card-like-number {
+    font-size: 12px;
+  }
+}
 
 .mapview-topbar {
   display: flex;

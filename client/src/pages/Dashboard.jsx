@@ -24,7 +24,11 @@ const Dashboard = () => {
     localStorage.getItem('avatarUrl') || DEFAULT_AVATAR
   );
 
-  const { posts = [] } = usePosts();
+  const {
+    posts = [],
+    isLoading: postsLoading,
+    error: postsError,
+  } = usePosts();
 
   useEffect(() => {
     setSection(sectionFromUrl);
@@ -59,6 +63,10 @@ const Dashboard = () => {
     if (!postIdFromUrl) return null;
     return posts.find((post) => post._id === postIdFromUrl) || null;
   }, [postIdFromUrl, posts]);
+  console.log("sectionFromUrl:", sectionFromUrl);
+console.log("postIdFromUrl:", postIdFromUrl);
+console.log("posts ids:", posts.map((p) => p._id));
+console.log("selectedPost:", selectedPost);
 
   const updateSection = (nextSection) => {
     const next = new URLSearchParams(searchParams);
@@ -98,7 +106,14 @@ const Dashboard = () => {
         );
 
       case 'posts':
-        return <AllSpots onOpenPost={openPostModal} />;
+        return (
+          <AllSpots
+            posts={posts}
+            isLoading={postsLoading}
+            error={postsError}
+            onOpenPost={openPostModal}
+          />
+        );
 
       case 'settings':
         return <SettingsPage />;
@@ -189,14 +204,15 @@ const Dashboard = () => {
         </button>
       </nav>
 
-      {selectedPost && (
+      {selectedPost ? (
         <PostModal
           post={selectedPost}
           onClose={closePostModal}
         />
-      )}
+      ) : null}
     </div>
   );
+  
 };
 
 export default Dashboard;

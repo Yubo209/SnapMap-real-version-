@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { usePosts } from "../hooks/usePosts";
 import "../../../style/AllSpots.css";
 
 const AVATAR_FALLBACK = "/default-avatar-icon-of-social-media-user-vector.jpg";
@@ -18,8 +17,12 @@ function extractCityFromAddress(address = "") {
   return "Unknown";
 }
 
-export default function AllSpots({ onOpenPost }) {
-  const { posts, isLoading, error } = usePosts();
+export default function AllSpots({
+  posts = [],
+  isLoading = false,
+  error = null,
+  onOpenPost,
+}) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const cityFromUrl = searchParams.get("city") || "All";
@@ -147,6 +150,7 @@ export default function AllSpots({ onOpenPost }) {
             const username = author.username || "Unknown";
             const avatarUrl = author.avatarUrl || AVATAR_FALLBACK;
             const city = extractCityFromAddress(post.address || "");
+            const likeCount = Array.isArray(post.likes) ? post.likes.length : 0;
 
             return (
               <button
@@ -180,7 +184,17 @@ export default function AllSpots({ onOpenPost }) {
                       alt={username}
                       className="spot-card-avatar"
                     />
-                    <span className="spot-card-username">{username}</span>
+
+                    <div className="spot-card-author-meta">
+                      <span className="spot-card-username">{username}</span>
+
+                      <span className="spot-card-like-count">
+                        <span className="spot-card-like-icon">♥</span>
+                        <span className="spot-card-like-number">
+                          {likeCount}
+                        </span>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </button>

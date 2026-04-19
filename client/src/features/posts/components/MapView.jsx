@@ -87,19 +87,58 @@ function FlyToUserLocation({ userLocation, triggerKey }) {
 
 function MapResizeFix() {
   const map = useMap();
+  const timeoutRef = useRef(null);
+  const rafRef = useRef(null);
 
   useEffect(() => {
+    let isUnmounted = false;
+
+    const clearPending = () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      if (rafRef.current) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+
+    const safeInvalidate = () => {
+      if (isUnmounted || !map) return;
+
+      let container = null;
+      try {
+        container = map.getContainer();
+      } catch {
+        return;
+      }
+
+      if (!container || !container.isConnected) return;
+
+      try {
+        map.invalidateSize({ pan: false, animate: false });
+      } catch (err) {
+        console.warn("map.invalidateSize skipped:", err);
+      }
+    };
+
     const refresh = () => {
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 0);
+      clearPending();
+
+      rafRef.current = window.requestAnimationFrame(() => {
+        timeoutRef.current = window.setTimeout(() => {
+          safeInvalidate();
+        }, 0);
+      });
     };
 
     refresh();
     window.addEventListener("resize", refresh);
 
-    const parent = map.getContainer().parentElement;
     let observer;
+    const container = map?.getContainer?.();
+    const parent = container?.parentElement;
 
     if (parent && typeof ResizeObserver !== "undefined") {
       observer = new ResizeObserver(() => {
@@ -109,8 +148,10 @@ function MapResizeFix() {
     }
 
     return () => {
+      isUnmounted = true;
       window.removeEventListener("resize", refresh);
       if (observer) observer.disconnect();
+      clearPending();
     };
   }, [map]);
 
@@ -177,13 +218,13 @@ function MarkerWithPopup({ post, shouldOpen }) {
       duration: 1,
     });
 
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       if (markerRef.current) {
         markerRef.current.openPopup();
       }
     }, 800);
 
-    return () => clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, [shouldOpen, map, post]);
 
   return (
