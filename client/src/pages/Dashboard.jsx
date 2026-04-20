@@ -5,7 +5,7 @@ import UploadPost from '../features/posts/components/UploadPost';
 import MapView from '../features/posts/components/MapView';
 import AllSpots from '../features/posts/components/AllSpots';
 import MyProfile from './MyProfile';
-import { MapPin, Upload, Image, Settings, User } from 'lucide-react';
+import { MapPin, Upload, Images, SlidersHorizontal, User } from 'lucide-react';
 import { getMe } from '../api';
 import SettingsPage from '../components/Settings';
 import PostModal from '../features/posts/components/PostModal';
@@ -13,26 +13,27 @@ import { usePosts } from '../features/posts/hooks/usePosts';
 
 const DEFAULT_AVATAR = '/default-avatar-icon-of-social-media-user-vector.jpg';
 
+const NAV_ITEMS = [
+  { key: 'map',      label: 'Map',      Icon: MapPin            },
+  { key: 'upload',   label: 'Upload',   Icon: Upload            },
+  { key: 'posts',    label: 'Spots',    Icon: Images            },
+  { key: 'settings', label: 'Settings', Icon: SlidersHorizontal },
+];
+
 const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const sectionFromUrl = searchParams.get('section') || 'map';
-  const postIdFromUrl = searchParams.get('post') || '';
+  const postIdFromUrl  = searchParams.get('post')    || '';
 
-  const [section, setSection] = useState(sectionFromUrl);
+  const [section,   setSection]   = useState(sectionFromUrl);
   const [avatarUrl, setAvatarUrl] = useState(
     localStorage.getItem('avatarUrl') || DEFAULT_AVATAR
   );
 
-  const {
-    posts = [],
-    isLoading: postsLoading,
-    error: postsError,
-  } = usePosts();
+  const { posts = [], isLoading: postsLoading, error: postsError } = usePosts();
 
-  useEffect(() => {
-    setSection(sectionFromUrl);
-  }, [sectionFromUrl]);
+  useEffect(() => { setSection(sectionFromUrl); }, [sectionFromUrl]);
 
   useEffect(() => {
     (async () => {
@@ -49,24 +50,16 @@ const Dashboard = () => {
   useEffect(() => {
     const onAvatarUpdated = (e) => {
       const url = e.detail;
-      if (url) {
-        setAvatarUrl(url);
-        localStorage.setItem('avatarUrl', url);
-      }
+      if (url) { setAvatarUrl(url); localStorage.setItem('avatarUrl', url); }
     };
-
     window.addEventListener('avatar-updated', onAvatarUpdated);
     return () => window.removeEventListener('avatar-updated', onAvatarUpdated);
   }, []);
 
   const selectedPost = useMemo(() => {
     if (!postIdFromUrl) return null;
-    return posts.find((post) => post._id === postIdFromUrl) || null;
+    return posts.find((p) => p._id === postIdFromUrl) || null;
   }, [postIdFromUrl, posts]);
-  console.log("sectionFromUrl:", sectionFromUrl);
-console.log("postIdFromUrl:", postIdFromUrl);
-console.log("posts ids:", posts.map((p) => p._id));
-console.log("selectedPost:", selectedPost);
 
   const updateSection = (nextSection) => {
     const next = new URLSearchParams(searchParams);
@@ -96,15 +89,13 @@ console.log("selectedPost:", selectedPost);
             <MapView />
           </div>
         );
-
       case 'upload':
         return (
           <>
-            <h2 className="section-title">Upload a New Post</h2>
+            <h2 className="section-title">Upload a spot</h2>
             <UploadPost />
           </>
         );
-
       case 'posts':
         return (
           <AllSpots
@@ -114,13 +105,10 @@ console.log("selectedPost:", selectedPost);
             onOpenPost={openPostModal}
           />
         );
-
       case 'settings':
         return <SettingsPage />;
-
       case 'myprofile':
         return <MyProfile />;
-
       default:
         return <MapView />;
     }
@@ -128,14 +116,21 @@ console.log("selectedPost:", selectedPost);
 
   return (
     <div className="dashboard-container">
+
+      {/* ── Header ── */}
       <header className="dashboard-header">
         <div className="brand" onClick={() => updateSection('map')}>
-          <img src="/spotmap-icon.svg" alt="SpotMap" className="brand-icon" />
+          <img src="/spotmap-icon.svg" alt="SnapMap" className="brand-icon" />
           <span className="brand-name">SnapMap</span>
         </div>
 
         <div className="header-right">
-          <button className="btn btn-ghost" onClick={() => updateSection('myprofile')}>
+          <button
+            className="btn-ghost"
+            onClick={() => updateSection('myprofile')}
+            aria-label="My profile"
+          >
+            <User size={13} strokeWidth={1.5} />
             Profile
           </button>
           <img
@@ -147,72 +142,60 @@ console.log("selectedPost:", selectedPost);
         </div>
       </header>
 
+      {/* ── Body ── */}
       <div className="dashboard-body">
+
+        {/* Sidebar */}
         <nav className="dashboard-sidebar">
           <ul>
-            <li className={section === 'map' ? 'active' : ''} onClick={() => updateSection('map')}>
-              <MapPin size={18} className="nav-icon" />
-              Map
-            </li>
-
-            <li className={section === 'upload' ? 'active' : ''} onClick={() => updateSection('upload')}>
-              <Upload size={18} className="nav-icon" />
-              Upload Post
-            </li>
-
-            <li className={section === 'posts' ? 'active' : ''} onClick={() => updateSection('posts')}>
-              <Image size={18} className="nav-icon" />
-              AllSpots
-            </li>
-
-            <li className={section === 'settings' ? 'active' : ''} onClick={() => updateSection('settings')}>
-              <Settings size={18} className="nav-icon" />
-              Settings
-            </li>
+            {NAV_ITEMS.map(({ key, label, Icon }) => (
+              <li
+                key={key}
+                className={section === key ? 'active' : ''}
+                onClick={() => updateSection(key)}
+              >
+                <Icon size={15} strokeWidth={1.5} className="nav-icon" />
+                {label}
+              </li>
+            ))}
           </ul>
         </nav>
 
-        <main className={`dashboard-feed ${section === 'map' ? 'dashboard-feed--map' : ''}`}>
+        {/* Main */}
+        <main
+          className={`dashboard-feed${section === 'map' ? ' dashboard-feed--map' : ''}`}
+        >
           {renderSection()}
         </main>
       </div>
 
+      {/* ── Mobile bottom nav ── */}
       <nav className="mobile-bottom-nav">
-        <button className={section === 'map' ? 'active' : ''} onClick={() => updateSection('map')}>
-          <MapPin size={18} />
-          <span>Map</span>
-        </button>
-
-        <button className={section === 'upload' ? 'active' : ''} onClick={() => updateSection('upload')}>
-          <Upload size={18} />
-          <span>Upload</span>
-        </button>
-
-        <button className={section === 'posts' ? 'active' : ''} onClick={() => updateSection('posts')}>
-          <Image size={18} />
-          <span>AllSpots</span>
-        </button>
-
-        <button className={section === 'settings' ? 'active' : ''} onClick={() => updateSection('settings')}>
-          <Settings size={18} />
-          <span>Settings</span>
-        </button>
-
-        <button className={section === 'myprofile' ? 'active' : ''} onClick={() => updateSection('myprofile')}>
-          <User size={18} />
+        {NAV_ITEMS.map(({ key, label, Icon }) => (
+          <button
+            key={key}
+            className={section === key ? 'active' : ''}
+            onClick={() => updateSection(key)}
+          >
+            <Icon size={19} strokeWidth={1.5} />
+            <span>{label}</span>
+          </button>
+        ))}
+        <button
+          className={section === 'myprofile' ? 'active' : ''}
+          onClick={() => updateSection('myprofile')}
+        >
+          <User size={19} strokeWidth={1.5} />
           <span>Profile</span>
         </button>
       </nav>
 
-      {selectedPost ? (
-        <PostModal
-          post={selectedPost}
-          onClose={closePostModal}
-        />
-      ) : null}
+      {/* ── Post modal ── */}
+      {selectedPost && (
+        <PostModal post={selectedPost} onClose={closePostModal} />
+      )}
     </div>
   );
-  
 };
 
 export default Dashboard;

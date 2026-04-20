@@ -1,258 +1,264 @@
+/* ─── AllSpots — Monochrome Editorial ───────────────────────────── */
+
 .allspots-page {
-  max-width: 1100px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 24px 20px 40px;
+  padding: 32px 28px 56px;
 }
 
+/* ── Header ──────────────────────────────────────────────────────── */
 .allspots-header {
-  margin-bottom: 20px;
+  margin-bottom: 28px;
 }
 
 .allspots-title {
   margin: 0;
-  font-size: 32px;
-  font-weight: 800;
-  color: #111827;
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--fg);
 }
 
 .allspots-subtitle {
-  margin-top: 8px;
-  color: #6b7280;
-  font-size: 15px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--fg-3);
+  letter-spacing: -0.01em;
 }
 
+/* ── Controls ────────────────────────────────────────────────────── */
 .allspots-controls {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
 }
 
 .allspots-search,
 .allspots-select {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 12px 14px;
-  font-size: 16px;
-  background: #fff;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color var(--t-base) var(--ease),
+              box-shadow   var(--t-base) var(--ease);
 }
+
+.allspots-search::placeholder { color: var(--fg-3); }
+.allspots-search:hover,
+.allspots-select:hover  { border-color: var(--border-strong); }
+.allspots-search:focus,
+.allspots-select:focus  { border-color: var(--fg); box-shadow: 0 0 0 3px rgba(13,13,12,.05); }
 
 .allspots-search {
   flex: 1;
-  min-width: 240px;
+  min-width: 220px;
 }
 
+.allspots-select {
+  padding: 0 12px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239e9e9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+/* ── Grid ────────────────────────────────────────────────────────── */
 .allspots-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
+  gap: 14px;
 }
 
+/* ── Spot card ───────────────────────────────────────────────────── */
 .spot-card {
-  border: none;
-  background: #fff;
-  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 8px;
   overflow: hidden;
   text-align: left;
   padding: 0;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: var(--shadow-xs);
+  transition: transform var(--t-base) var(--ease),
+              box-shadow var(--t-base) var(--ease),
+              border-color var(--t-base) var(--ease);
 }
-
 .spot-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
 }
 
+/* Image */
 .spot-card-image-wrap {
   width: 100%;
   aspect-ratio: 3 / 4;
-  background: #f3f4f6;
+  background: var(--surface-2);
+  overflow: hidden;
 }
-
 .spot-card-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform var(--t-slow) var(--ease), filter var(--t-base) var(--ease);
+  filter: grayscale(0.05);
 }
-
+.spot-card:hover .spot-card-image {
+  transform: scale(1.03);
+  filter: grayscale(0);
+}
 .spot-card-placeholder {
   width: 100%;
   height: 100%;
   display: grid;
   place-items: center;
-  color: #9ca3af;
+  color: var(--fg-3);
+  font-size: 11px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
 }
 
+/* Body */
 .spot-card-body {
-  padding: 12px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--border);
 }
 
 .spot-card-title {
-  margin: 0 0 6px;
-  font-size: 16px;
-  font-weight: 700;
-  color: #111827;
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fg);
   line-height: 1.35;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .spot-card-city {
   margin: 0 0 10px;
-  font-size: 14px;
-  color: #6b7280;
+  font-size: 12px;
+  color: var(--fg-3);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Author row */
 .spot-card-author {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
-
 .spot-card-avatar {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
   border-radius: 50%;
   object-fit: cover;
   display: block;
-  flex-shrink: 0;
+  border: 1px solid var(--border);
+  filter: grayscale(0.1);
 }
-
 .spot-card-author-meta {
   display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
-  flex-wrap: wrap;
+  flex: 1;
+  justify-content: space-between;
 }
-
 .spot-card-username {
-  font-size: 13px;
-  color: #374151;
+  font-size: 12px;
+  color: var(--fg-2);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Like */
 .spot-card-like-count {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   line-height: 1;
   white-space: nowrap;
-  color: #111827;
+  flex-shrink: 0;
 }
+.spot-card-like-icon   { font-size: 13px; line-height: 1; color: var(--fg-3); }
+.spot-card-like-number { font-size: 12px; font-weight: 500; line-height: 1; color: var(--fg-2); }
 
-.spot-card-like-icon {
-  font-size: 18px;   /* 以后想改爱心大小，改这里 */
-  line-height: 1;
-  color: #111827;
-}
-
-.spot-card-like-number {
-  font-size: 14px;   /* 以后想改数字大小，改这里 */
-  font-weight: 600;
-  line-height: 1;
-  color: #111827;
-}
-
-@media (max-width: 900px) {
-  .allspots-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 560px) {
-  .allspots-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .allspots-title {
-    font-size: 26px;
-  }
-
-  .spot-card-title {
-    font-size: 14px;
-  }
-
-  .spot-card-author-meta {
-    gap: 6px;
-  }
-
-  .spot-card-like-icon {
-    font-size: 15px;
-  }
-
-  .spot-card-like-number {
-    font-size: 12px;
-  }
-}
-
+/* ── MapView topbar (kept here per original file) ────────────────── */
 .mapview-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
-
 .mapview-page-title {
   margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  color: #111827;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--fg);
 }
-
 .nearby-spots-badge {
-  border: none;
-  background: #111827;
-  color: #ffffff;
-  border-radius: 999px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 600;
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-radius: var(--r-full);
+  padding: 7px 16px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
   white-space: nowrap;
+  transition: background var(--t-base) var(--ease),
+              transform   var(--t-fast) var(--ease);
 }
+.nearby-spots-badge:hover  { background: var(--accent-hover); transform: translateY(-1px); }
+.nearby-spots-badge:active { transform: scale(0.97); }
 
-.nearby-spots-badge:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
-}
-
-.nearby-spots-badge:active {
-  transform: translateY(0);
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .allspots-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 768px) {
-  .mapview-topbar {
-    align-items: flex-start;
-    gap: 12px;
-  }
+  .allspots-page { padding: 16px 10px 32px; }
+  .allspots-title { font-size: 20px; }
+  .allspots-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
 
-  .mapview-page-title {
-    font-size: 22px;
-  }
-
-  .nearby-spots-badge {
-    font-size: 13px;
-    padding: 9px 14px;
-  }
+  .mapview-topbar { align-items: flex-start; gap: 10px; }
+  .mapview-page-title { font-size: 16px; }
+  .nearby-spots-badge { font-size: 12px; padding: 6px 13px; }
 }
 
 @media (max-width: 480px) {
-  .mapview-topbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .allspots-page { padding: 12px 0 32px; }
+  .allspots-header,
+  .allspots-controls { padding: 0 10px; }
+  .allspots-grid { gap: 6px; }
+  .spot-card { border-radius: 6px; }
+  .spot-card-title { font-size: 12.5px; }
+  .spot-card-body { padding: 9px 11px 11px; }
 
-  .nearby-spots-badge {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
-  }
+  .mapview-topbar { flex-direction: column; align-items: flex-start; }
+  .nearby-spots-badge { width: 100%; text-align: center; justify-content: center; display: flex; }
 }

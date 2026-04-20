@@ -209,9 +209,35 @@ function TwoColContent({ post }) {
 function MarkerWithPopup({ post, shouldOpen }) {
   const map = useMap();
   const markerRef = useRef(null);
+  const previousViewRef = useRef(null);
+  const openedByFocusRef = useRef(false);
+
+  const saveCurrentView = () => {
+    previousViewRef.current = {
+      center: map.getCenter(),
+      zoom: map.getZoom(),
+    };
+  };
+
+  const restorePreviousView = () => {
+    if (!previousViewRef.current) return;
+
+    const { center, zoom } = previousViewRef.current;
+
+    map.flyTo([center.lat, center.lng], zoom, {
+      animate: true,
+      duration: 0.8,
+    });
+
+    previousViewRef.current = null;
+    openedByFocusRef.current = false;
+  };
 
   useEffect(() => {
     if (!shouldOpen || !markerRef.current) return;
+
+    saveCurrentView();
+    openedByFocusRef.current = true;
 
     map.flyTo([post.lat, post.lng], FOCUS_ZOOM, {
       animate: true,
@@ -234,11 +260,17 @@ function MarkerWithPopup({ post, shouldOpen }) {
       ref={markerRef}
       eventHandlers={{
         click: (e) => {
+          saveCurrentView();
+
           map.panTo([post.lat, post.lng], {
             animate: true,
             duration: 0.6,
           });
+
           e.target.openPopup();
+        },
+        popupclose: () => {
+          restorePreviousView();
         },
       }}
     >
