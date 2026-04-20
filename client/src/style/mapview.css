@@ -1,4 +1,4 @@
-/* ─── MapView — Monochrome Editorial ────────────────────────────── */
+/* ─── MapView — Complete Fixed Version ─────────────────────────── */
 
 .mapview-wrapper {
   width: 100%;
@@ -10,7 +10,7 @@
   overflow: hidden;
 }
 
-/* ── Action chips ───────────────────────────────────────────────── */
+/* ── Action chips ──────────────────────────────────────────────── */
 .map-action-row {
   display: flex;
   align-items: center;
@@ -39,9 +39,11 @@
   cursor: pointer;
   white-space: nowrap;
   flex: 0 0 auto;
-  transition: background var(--t-base) var(--ease),
-              transform var(--t-fast) var(--ease),
-              border-color var(--t-base) var(--ease);
+  transition:
+    background var(--t-base) var(--ease),
+    transform var(--t-fast) var(--ease),
+    border-color var(--t-base) var(--ease),
+    box-shadow var(--t-base) var(--ease);
 }
 
 .map-chip:hover {
@@ -65,7 +67,7 @@
   letter-spacing: -0.01em;
 }
 
-/* ── Status text ────────────────────────────────────────────────── */
+/* ── Status text ───────────────────────────────────────────────── */
 .map-status {
   flex-shrink: 0;
   padding: 6px 16px;
@@ -80,7 +82,7 @@
   color: var(--fg-3);
 }
 
-/* ── Map stage ──────────────────────────────────────────────────── */
+/* ── Map stage ─────────────────────────────────────────────────── */
 .mapview-stage {
   flex: 1;
   min-height: 420px;
@@ -89,7 +91,7 @@
   overflow: hidden;
 }
 
-/* ── Leaflet map fills container ────────────────────────────────── */
+/* ── Leaflet map fills container ───────────────────────────────── */
 .modern-map {
   width: 100% !important;
   height: 100% !important;
@@ -98,13 +100,12 @@
   background: var(--surface-2);
 }
 
-/* 关键：确保 leaflet container 本身也撑满 */
 .modern-map.leaflet-container {
   width: 100% !important;
   height: 100% !important;
 }
 
-/* ── Hide leaflet chrome ────────────────────────────────────────── */
+/* ── Hide leaflet chrome ───────────────────────────────────────── */
 .leaflet-control-zoom {
   display: none !important;
 }
@@ -113,10 +114,7 @@
   display: none !important;
 }
 
-/* 不要把整个 control container 干掉，太激进 */
-/* .leaflet-control-container { display: none !important; } */
-
-/* ── Popup shell ────────────────────────────────────────────────── */
+/* ── Default popup shell ───────────────────────────────────────── */
 .mapview-wrapper .leaflet-popup-content-wrapper {
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-xl);
@@ -151,9 +149,10 @@
   line-height: 28px !important;
   text-align: center !important;
   box-shadow: var(--shadow-xs) !important;
-  transition: background var(--t-base) var(--ease),
-              border-color var(--t-base) var(--ease),
-              color var(--t-base) var(--ease) !important;
+  transition:
+    background var(--t-base) var(--ease),
+    border-color var(--t-base) var(--ease),
+    color var(--t-base) var(--ease) !important;
   z-index: 20;
 }
 
@@ -163,7 +162,7 @@
   color: var(--fg) !important;
 }
 
-/* ── Popup card ─────────────────────────────────────────────────── */
+/* ── Popup card ────────────────────────────────────────────────── */
 .popup-card {
   display: flex;
   flex-direction: column;
@@ -220,7 +219,7 @@
 .popup-image-placeholder {
   color: var(--fg-3);
   font-size: 11px;
-  letter-spacing: .05em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -257,26 +256,35 @@
   line-height: 1.6;
   color: var(--fg-3);
   font-variant-numeric: tabular-nums;
-  letter-spacing: .01em;
+  letter-spacing: 0.01em;
   overflow-wrap: anywhere;
 }
 
-/* ── User popup ─────────────────────────────────────────────────── */
+/* ── User popup: fixed to content width ────────────────────────── */
 .user-popup .leaflet-popup-content-wrapper {
   border-radius: var(--r-full);
-  padding: 0;
-  box-shadow: var(--shadow-md);
+  padding: 4px 6px;
+  box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
   background: var(--surface);
+  width: fit-content !important;
+  max-width: none !important;
+  overflow: visible;
 }
 
 .user-popup .leaflet-popup-content {
   margin: 0 !important;
-  width: auto !important;
+  width: fit-content !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  display: inline-block !important;
 }
 
 .user-popup-content {
-  padding: 7px 14px;
+  display: inline-block;
+  width: auto;
+  max-width: none;
+  padding: 6px 12px;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -290,7 +298,7 @@
   background: var(--surface);
 }
 
-/* ── Tablet ─────────────────────────────────────────────────────── */
+/* ── Tablet ────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .map-action-row {
     padding: 10px 12px;
@@ -313,6 +321,19 @@
 
   .mapview-wrapper .leaflet-popup-content {
     width: min(90vw, 360px) !important;
+  }
+
+  /* user popup override */
+  .user-popup .leaflet-popup-content {
+    width: fit-content !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    display: inline-block !important;
+  }
+
+  .user-popup .leaflet-popup-content-wrapper {
+    width: fit-content !important;
+    max-width: none !important;
   }
 
   .popup-header {
@@ -358,10 +379,23 @@
   }
 }
 
-/* ── Small phones ───────────────────────────────────────────────── */
+/* ── Small phones ──────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .mapview-wrapper .leaflet-popup-content {
     width: min(92vw, 320px) !important;
+  }
+
+  /* user popup override */
+  .user-popup .leaflet-popup-content {
+    width: fit-content !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    display: inline-block !important;
+  }
+
+  .user-popup .leaflet-popup-content-wrapper {
+    width: fit-content !important;
+    max-width: none !important;
   }
 
   .mapview-stage {
