@@ -419,9 +419,11 @@ export default function MapView() {
           dragging={true}
           doubleClickZoom={false}
           touchZoom={true}
+          tap={false}
           keyboard={false}
           bounceAtZoomLimits={false}
           zoomSnap={0}
+          zoomDelta={0.5}
           scrollWheelZoom={false}
           smoothWheelZoom={true}
           smoothSensitivity={8}

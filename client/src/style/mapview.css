@@ -1,4 +1,4 @@
-/* ─── MapView — Complete Fixed Version ─────────────────────────── */
+/* ─── MapView — Mobile Touch Optimized ─────────────────────────── */
 
 .mapview-wrapper {
   width: 100%;
@@ -22,6 +22,7 @@
   scrollbar-width: none;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
 }
 
 .map-action-row::-webkit-scrollbar {
@@ -89,6 +90,9 @@
   width: 100%;
   position: relative;
   overflow: hidden;
+
+  /* 关键：让这个区域的触摸交给地图自己处理 */
+  touch-action: none;
 }
 
 /* ── Leaflet map fills container ───────────────────────────────── */
@@ -98,6 +102,9 @@
   border: none;
   outline: none;
   background: var(--surface-2);
+
+  /* 关键：地图本体也禁用浏览器默认 touch 手势接管 */
+  touch-action: none;
 }
 
 .modern-map.leaflet-container {
@@ -260,7 +267,7 @@
   overflow-wrap: anywhere;
 }
 
-/* ── User popup: fixed to content width ────────────────────────── */
+/* ── User popup: 保持小胶囊宽度 ───────────────────────────────── */
 .user-popup .leaflet-popup-content-wrapper {
   border-radius: var(--r-full);
   padding: 4px 6px;
