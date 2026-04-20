@@ -415,7 +415,7 @@ export default function MapView() {
           center={initialCenter}
           zoom={INITIAL_ZOOM}
           className="modern-map"
-          style={{ width: "100%", height: "100%", borderRadius: 16 }}
+          style={{ width: "100%", height: "100%" }}
           dragging={true}
           doubleClickZoom={false}
           touchZoom={true}
@@ -426,6 +426,7 @@ export default function MapView() {
           smoothWheelZoom={true}
           smoothSensitivity={8}
           zoomControl={false}
+          preferCanvas={true}
         >
           <MapResizeFix />
 
@@ -434,10 +435,10 @@ export default function MapView() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             subdomains="abcd"
             maxZoom={20}
-            keepBuffer={20}
             maxNativeZoom={20}
-            updateWhenZooming={true}
-            updateWhenIdle={true}
+            keepBuffer={4}
+            updateWhenZooming={false}
+            updateWhenIdle={false}
           />
 
           {!focusedPost && userLocation ? (
