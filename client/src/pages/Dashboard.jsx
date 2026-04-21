@@ -103,6 +103,8 @@ const Dashboard = () => {
             isLoading={postsLoading}
             error={postsError}
             onOpenPost={openPostModal}
+            initialCity={searchParams.get('city') || 'All'}
+            initialSearch={searchParams.get('q') || ''}
           />
         );
       case 'settings':

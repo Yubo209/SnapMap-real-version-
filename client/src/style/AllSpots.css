@@ -7,9 +7,7 @@
 }
 
 /* ── Header ──────────────────────────────────────────────────────── */
-.allspots-header {
-  margin-bottom: 28px;
-}
+.allspots-header { margin-bottom: 28px; }
 
 .allspots-title {
   margin: 0;
@@ -18,7 +16,6 @@
   letter-spacing: -0.03em;
   color: var(--fg);
 }
-
 .allspots-subtitle {
   margin-top: 6px;
   font-size: 13px;
@@ -32,6 +29,7 @@
   gap: 10px;
   margin-bottom: 28px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .allspots-search,
@@ -48,27 +46,51 @@
   transition: border-color var(--t-base) var(--ease),
               box-shadow   var(--t-base) var(--ease);
 }
-
 .allspots-search::placeholder { color: var(--fg-3); }
 .allspots-search:hover,
 .allspots-select:hover  { border-color: var(--border-strong); }
 .allspots-search:focus,
 .allspots-select:focus  { border-color: var(--fg); box-shadow: 0 0 0 3px rgba(13,13,12,.05); }
 
-.allspots-search {
-  flex: 1;
-  min-width: 220px;
-}
+.allspots-search { flex: 1; min-width: 220px; }
 
 .allspots-select {
-  padding: 0 12px;
+  padding: 0 32px 0 12px;
   cursor: pointer;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239e9e9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
-  padding-right: 32px;
 }
+
+/* ── Clear filter button ─────────────────────────────────────────── */
+.allspots-clear-btn {
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--fg-3);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background var(--t-base) var(--ease),
+              color var(--t-base) var(--ease),
+              border-color var(--t-base) var(--ease),
+              transform var(--t-fast) var(--ease);
+}
+.allspots-clear-btn:hover {
+  background: var(--surface-2);
+  color: var(--fg);
+  border-color: var(--border-strong);
+}
+.allspots-clear-btn:active { transform: scale(0.97); }
 
 /* ── Grid ────────────────────────────────────────────────────────── */
 .allspots-grid {
@@ -97,7 +119,6 @@
   border-color: var(--border-strong);
 }
 
-/* Image */
 .spot-card-image-wrap {
   width: 100%;
   aspect-ratio: 3 / 4;
@@ -105,135 +126,56 @@
   overflow: hidden;
 }
 .spot-card-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
   transition: transform var(--t-slow) var(--ease), filter var(--t-base) var(--ease);
   filter: grayscale(0.05);
 }
-.spot-card:hover .spot-card-image {
-  transform: scale(1.03);
-  filter: grayscale(0);
-}
+.spot-card:hover .spot-card-image { transform: scale(1.03); filter: grayscale(0); }
 .spot-card-placeholder {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  color: var(--fg-3);
-  font-size: 11px;
-  letter-spacing: .05em;
-  text-transform: uppercase;
+  width: 100%; height: 100%;
+  display: grid; place-items: center;
+  color: var(--fg-3); font-size: 11px;
+  letter-spacing: .05em; text-transform: uppercase;
 }
 
-/* Body */
 .spot-card-body {
   padding: 12px 14px 14px;
   border-top: 1px solid var(--border);
 }
-
 .spot-card-title {
   margin: 0 0 4px;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--fg);
-  line-height: 1.35;
+  font-size: 13.5px; font-weight: 500;
+  color: var(--fg); line-height: 1.35;
   letter-spacing: -0.015em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-
 .spot-card-city {
   margin: 0 0 10px;
-  font-size: 12px;
-  color: var(--fg-3);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 12px; color: var(--fg-3); letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* Author row */
-.spot-card-author {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
+.spot-card-author { display: flex; align-items: center; gap: 7px; }
 .spot-card-avatar {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
-  border: 1px solid var(--border);
-  filter: grayscale(0.1);
+  width: 22px; height: 22px; min-width: 22px;
+  border-radius: 50%; object-fit: cover; display: block;
+  border: 1px solid var(--border); filter: grayscale(0.1);
 }
 .spot-card-author-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  flex: 1;
-  justify-content: space-between;
+  display: flex; align-items: center; gap: 8px;
+  min-width: 0; flex: 1; justify-content: space-between;
 }
 .spot-card-username {
-  font-size: 12px;
-  color: var(--fg-2);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 12px; color: var(--fg-2); letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-
-/* Like */
 .spot-card-like-count {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  line-height: 1;
-  white-space: nowrap;
-  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 3px;
+  line-height: 1; white-space: nowrap; flex-shrink: 0;
 }
 .spot-card-like-icon   { font-size: 13px; line-height: 1; color: var(--fg-3); }
 .spot-card-like-number { font-size: 12px; font-weight: 500; line-height: 1; color: var(--fg-2); }
-
-/* ── MapView topbar (kept here per original file) ────────────────── */
-.mapview-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-.mapview-page-title {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  color: var(--fg);
-}
-.nearby-spots-badge {
-  appearance: none;
-  border: 1px solid var(--border-strong);
-  background: var(--accent);
-  color: var(--accent-fg);
-  border-radius: var(--r-full);
-  padding: 7px 16px;
-  font-family: var(--font-sans);
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background var(--t-base) var(--ease),
-              transform   var(--t-fast) var(--ease);
-}
-.nearby-spots-badge:hover  { background: var(--accent-hover); transform: translateY(-1px); }
-.nearby-spots-badge:active { transform: scale(0.97); }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -244,10 +186,6 @@
   .allspots-page { padding: 16px 10px 32px; }
   .allspots-title { font-size: 20px; }
   .allspots-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
-
-  .mapview-topbar { align-items: flex-start; gap: 10px; }
-  .mapview-page-title { font-size: 16px; }
-  .nearby-spots-badge { font-size: 12px; padding: 6px 13px; }
 }
 
 @media (max-width: 480px) {
@@ -258,7 +196,5 @@
   .spot-card { border-radius: 6px; }
   .spot-card-title { font-size: 12.5px; }
   .spot-card-body { padding: 9px 11px 11px; }
-
-  .mapview-topbar { flex-direction: column; align-items: flex-start; }
-  .nearby-spots-badge { width: 100%; text-align: center; justify-content: center; display: flex; }
+  .allspots-clear-btn { font-size: 12px; padding: 0 12px; }
 }
