@@ -7,92 +7,92 @@ import "leaflet/dist/leaflet.css";
 import "../../../style/mapview.css";
 import { usePosts } from "../hooks/usePosts";
 import { useUserLocation } from "../hooks/useUserLocation";
-
+ 
 const customIcon = new L.Icon({
   iconUrl: "/icons8-map-pin-50.png",
   iconSize: [40, 40],
   iconAnchor: [20, 40],
   popupAnchor: [0, -40],
 });
-
+ 
 const userIcon = new L.Icon({
   iconUrl: "/spotmap-icon.svg",
   iconSize: [34, 34],
   iconAnchor: [17, 34],
   popupAnchor: [0, -34],
 });
-
+ 
 const POPUP_MAX_WIDTH = 880;
 const INITIAL_ZOOM = 3;
 const FIT_MAX_ZOOM = 3;
 const USER_ZOOM = 11;
 const NEARBY_RADIUS_KM = 80;
 const FOCUS_ZOOM = 14;
-
+ 
 function getDistanceKm(lat1, lng1, lat2, lng2) {
   const toRad = (value) => (value * Math.PI) / 180;
   const R = 6371;
   const dLat = toRad(lat2 - lat1);
   const dLng = toRad(lng2 - lng1);
-
+ 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
       Math.cos(toRad(lat2)) *
       Math.sin(dLng / 2) *
       Math.sin(dLng / 2);
-
+ 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
-
+ 
 function extractCityFromAddress(address = "") {
   const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
   if (parts.length >= 2) return parts[parts.length - 2];
   return "";
 }
-
+ 
 function FitBoundsOnPosts({ posts, padding = [40, 40], maxZoom = FIT_MAX_ZOOM }) {
   const map = useMap();
-
+ 
   useEffect(() => {
     if (!posts || posts.length === 0) return;
-
+ 
     if (posts.length === 1) {
       const p = posts[0];
       map.setView([p.lat, p.lng], 10, { animate: true });
       return;
     }
-
+ 
     const bounds = L.latLngBounds(posts.map((p) => [p.lat, p.lng]));
     map.fitBounds(bounds, { padding, maxZoom, animate: true });
   }, [posts, map, padding, maxZoom]);
-
+ 
   return null;
 }
-
+ 
 function FlyToUserLocation({ userLocation, triggerKey }) {
   const map = useMap();
-
+ 
   useEffect(() => {
     if (!userLocation) return;
-
+ 
     map.flyTo([userLocation.lat, userLocation.lng], USER_ZOOM, {
       duration: 1.2,
     });
   }, [userLocation, triggerKey, map]);
-
+ 
   return null;
 }
-
+ 
 function MapResizeFix() {
   const map = useMap();
   const timeoutRef = useRef(null);
   const rafRef = useRef(null);
-
+ 
   useEffect(() => {
     let isUnmounted = false;
-
+ 
     const clearPending = () => {
       if (timeoutRef.current) {
         window.clearTimeout(timeoutRef.current);
@@ -103,50 +103,50 @@ function MapResizeFix() {
         rafRef.current = null;
       }
     };
-
+ 
     const safeInvalidate = () => {
       if (isUnmounted || !map) return;
-
+ 
       let container = null;
       try {
         container = map.getContainer();
       } catch {
         return;
       }
-
+ 
       if (!container || !container.isConnected) return;
-
+ 
       try {
         map.invalidateSize({ pan: false, animate: false });
       } catch (err) {
         console.warn("map.invalidateSize skipped:", err);
       }
     };
-
+ 
     const refresh = () => {
       clearPending();
-
+ 
       rafRef.current = window.requestAnimationFrame(() => {
         timeoutRef.current = window.setTimeout(() => {
           safeInvalidate();
         }, 0);
       });
     };
-
+ 
     refresh();
     window.addEventListener("resize", refresh);
-
+ 
     let observer;
     const container = map?.getContainer?.();
     const parent = container?.parentElement;
-
+ 
     if (parent && typeof ResizeObserver !== "undefined") {
       observer = new ResizeObserver(() => {
         refresh();
       });
       observer.observe(parent);
     }
-
+ 
     return () => {
       isUnmounted = true;
       window.removeEventListener("resize", refresh);
@@ -154,25 +154,25 @@ function MapResizeFix() {
       clearPending();
     };
   }, [map]);
-
+ 
   return null;
 }
-
+ 
 function TwoColContent({ post }) {
   const rightRef = useRef(null);
-
+ 
   useEffect(() => {
     if (rightRef.current) {
       rightRef.current.scrollTop = 0;
     }
   }, []);
-
+ 
   return (
     <div className="popup-card">
       <div className="popup-header">
         <h4 className="popup-title">{post.name || "Untitled Spot"}</h4>
       </div>
-
+ 
       <div className="popup-body">
         <div className="popup-left">
           <div className="popup-image-frame">
@@ -187,16 +187,16 @@ function TwoColContent({ post }) {
             )}
           </div>
         </div>
-
+ 
         <div className="popup-right" ref={rightRef}>
           {post.description && <p className="popup-desc">{post.description}</p>}
-
+ 
           {post.address && (
             <p className="popup-address">
               <strong>Address:</strong> {post.address}
             </p>
           )}
-
+ 
           <p className="popup-coord">
             <strong>Coordinates:</strong> {post.lat.toFixed(4)}, {post.lng.toFixed(4)}
           </p>
@@ -205,54 +205,54 @@ function TwoColContent({ post }) {
     </div>
   );
 }
-
+ 
 function MarkerWithPopup({ post, shouldOpen }) {
   const map = useMap();
   const markerRef = useRef(null);
   const previousViewRef = useRef(null);
   const openedByFocusRef = useRef(false);
-
+ 
   const saveCurrentView = () => {
     previousViewRef.current = {
       center: map.getCenter(),
       zoom: map.getZoom(),
     };
   };
-
+ 
   const restorePreviousView = () => {
     if (!previousViewRef.current) return;
-
+ 
     const { center, zoom } = previousViewRef.current;
-
+ 
     map.flyTo([center.lat, center.lng], zoom, {
       animate: true,
       duration: 0.8,
     });
-
+ 
     previousViewRef.current = null;
     openedByFocusRef.current = false;
   };
-
+ 
   useEffect(() => {
     if (!shouldOpen || !markerRef.current) return;
-
+ 
     saveCurrentView();
     openedByFocusRef.current = true;
-
+ 
     map.flyTo([post.lat, post.lng], FOCUS_ZOOM, {
       animate: true,
       duration: 1,
     });
-
+ 
     const timer = window.setTimeout(() => {
       if (markerRef.current) {
         markerRef.current.openPopup();
       }
     }, 800);
-
+ 
     return () => window.clearTimeout(timer);
   }, [shouldOpen, map, post]);
-
+ 
   return (
     <Marker
       position={[post.lat, post.lng]}
@@ -261,12 +261,12 @@ function MarkerWithPopup({ post, shouldOpen }) {
       eventHandlers={{
         click: (e) => {
           saveCurrentView();
-
+ 
           map.panTo([post.lat, post.lng], {
             animate: true,
             duration: 0.6,
           });
-
+ 
           e.target.openPopup();
         },
         popupclose: () => {
@@ -286,18 +286,18 @@ function MarkerWithPopup({ post, shouldOpen }) {
     </Marker>
   );
 }
-
+ 
 function UserMarker({ userLocation }) {
   const markerRef = useRef(null);
   const openedOnceRef = useRef(false);
-
+ 
   useEffect(() => {
     if (markerRef.current && !openedOnceRef.current) {
       markerRef.current.openPopup();
       openedOnceRef.current = true;
     }
   }, []);
-
+ 
   return (
     <Marker
       position={[userLocation.lat, userLocation.lng]}
@@ -310,17 +310,23 @@ function UserMarker({ userLocation }) {
     </Marker>
   );
 }
-
+ 
 export default function MapView() {
   const { posts, isLoading, error } = usePosts();
   const { userLocation, locationLoading, locationError } = useUserLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-
+ 
   const focusPostId = searchParams.get("focusPost") || "";
   const resetKeyRef = useRef(0);
-
+ 
+  // 检测真实手机：触摸设备 + 窄屏
+  const isMobile = useMemo(
+    () => typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches,
+    []
+  );
+ 
   const initialCenter = useMemo(() => [39.8283, -98.5795], []);
-
+ 
   const valid = useMemo(
     () =>
       (posts || []).filter(
@@ -328,15 +334,15 @@ export default function MapView() {
       ),
     [posts]
   );
-
+ 
   const focusedPost = useMemo(() => {
     if (!focusPostId) return null;
     return valid.find((post) => post._id === focusPostId) || null;
   }, [focusPostId, valid]);
-
+ 
   const nearbyPosts = useMemo(() => {
     if (!userLocation || !valid.length) return [];
-
+ 
     return valid.filter((post) => {
       const distance = getDistanceKm(
         userLocation.lat,
@@ -347,24 +353,24 @@ export default function MapView() {
       return distance <= NEARBY_RADIUS_KM;
     });
   }, [userLocation, valid]);
-
+ 
   const nearbyCity = useMemo(() => {
     if (!nearbyPosts.length) return "";
     return extractCityFromAddress(nearbyPosts[0].address || "");
   }, [nearbyPosts]);
-
+ 
   const handleNearbyJump = () => {
     const params = new URLSearchParams();
     params.set("section", "posts");
-
+ 
     if (nearbyCity) {
       params.set("city", nearbyCity);
       params.set("q", nearbyCity);
     }
-
+ 
     setSearchParams(params);
   };
-
+ 
   const handleResetToMyLocation = () => {
     const next = new URLSearchParams(searchParams);
     next.set("section", "map");
@@ -372,15 +378,15 @@ export default function MapView() {
     setSearchParams(next);
     resetKeyRef.current += 1;
   };
-
+ 
   if (isLoading) {
     return <p>Loading map...</p>;
   }
-
+ 
   if (error) {
     return <p>Failed to load posts for map.</p>;
   }
-
+ 
   return (
     <div className="mapview-wrapper">
       {!!userLocation && (
@@ -392,7 +398,7 @@ export default function MapView() {
           >
             My Location
           </button>
-
+ 
           <button
             type="button"
             className="map-chip map-chip--large"
@@ -404,12 +410,12 @@ export default function MapView() {
           </button>
         </div>
       )}
-
+ 
       {locationLoading && <p className="map-status">Locating you...</p>}
       {!locationLoading && locationError && (
         <p className="map-status map-status-muted">{locationError}</p>
       )}
-
+ 
       <div className="mapview-stage">
         <MapContainer
           center={initialCenter}
@@ -422,27 +428,29 @@ export default function MapView() {
           tap={false}
           keyboard={false}
           bounceAtZoomLimits={false}
-          zoomSnap={0}
-          zoomDelta={0.5}
+          zoomSnap={isMobile ? 0.25 : 0}
+          zoomDelta={isMobile ? 0.25 : 0.5}
           scrollWheelZoom={false}
-          smoothWheelZoom={true}
+          smoothWheelZoom={!isMobile}
           smoothSensitivity={8}
           zoomControl={false}
           preferCanvas={true}
         >
           <MapResizeFix />
-
+ 
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             subdomains="abcd"
             maxZoom={20}
             maxNativeZoom={20}
-            keepBuffer={4}
+            keepBuffer={2}
             updateWhenZooming={false}
             updateWhenIdle={false}
+            tileSize={256}
+            className="map-tiles"
           />
-
+ 
           {!focusedPost && userLocation ? (
             <>
               <FlyToUserLocation
@@ -454,7 +462,7 @@ export default function MapView() {
           ) : !focusedPost ? (
             <FitBoundsOnPosts posts={valid} />
           ) : null}
-
+ 
           {valid.map((post) => (
             <MarkerWithPopup
               key={post._id || `${post.lat}-${post.lng}`}
