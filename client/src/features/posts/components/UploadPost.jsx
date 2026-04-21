@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useCreatePost } from '../hooks/useCreatePost'; 
+import { useCreatePost } from '../hooks/useCreatePost';
 
-const UploadPost = () => {
+const UploadPost = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -12,7 +12,6 @@ const UploadPost = () => {
   const [preview, setPreview] = useState(null);
   const [message, setMessage] = useState('');
 
-  
   const { submitPost, loading, error } = useCreatePost();
 
   const handleChange = (e) => {
@@ -37,13 +36,15 @@ const UploadPost = () => {
     setMessage('');
 
     try {
-      await submitPost(formData);        
-      setMessage(' Post uploaded successfully!');
+      await submitPost(formData);
+      setMessage('Post uploaded successfully!');
       setFormData({ name: '', description: '', address: '', image: null });
       setPreview(null);
+
+      // Trigger AllSpots refresh without navigating away
+      onSuccess?.();
     } catch (err) {
-      
-      setMessage(' Failed to upload.');
+      setMessage('Failed to upload.');
     }
   };
 
@@ -52,28 +53,17 @@ const UploadPost = () => {
       <h2>Upload New Photography Spot</h2>
       <form onSubmit={handleSubmit}>
         <label>
-           Location Name:
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
+          Location Name:
+          <input type="text" name="name" value={formData.name} onChange={handleChange} required />
         </label>
         <br />
         <label>
-           Description:
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-          />
+          Description:
+          <textarea name="description" value={formData.description} onChange={handleChange} required />
         </label>
         <br />
         <label>
-           Address (or place name):
+          Address (or place name):
           <input
             type="text"
             name="address"
@@ -88,15 +78,11 @@ const UploadPost = () => {
         </label>
         <br />
         <label>
-           Upload Image:
+          Upload Image:
           <input type="file" accept="image/*" onChange={handleImageChange} />
         </label>
         {preview && (
-          <img
-            src={preview}
-            alt="Preview"
-            style={{ width: '100%', marginTop: '10px' }}
-          />
+          <img src={preview} alt="Preview" style={{ width: '100%', marginTop: '10px' }} />
         )}
         <br />
         <button type="submit" disabled={loading}>
@@ -105,11 +91,7 @@ const UploadPost = () => {
       </form>
 
       {message && <p style={{ marginTop: '1rem' }}>{message}</p>}
-      {error && (
-        <p style={{ marginTop: '0.5rem', color: 'red' }}>
-          {error.message}
-        </p>
-      )}
+      {error && <p style={{ marginTop: '0.5rem', color: 'red' }}>{error.message}</p>}
     </div>
   );
 };

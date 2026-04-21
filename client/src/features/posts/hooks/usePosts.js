@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getPosts } from "../../../api";
 
 export function usePosts() {
-  const [posts, setPosts] = useState([]);
+  const [posts,     setPosts]   = useState([]);
   const [isLoading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error,     setError]   = useState(null);
+  const [tick,      setTick]    = useState(0); // bump to re-fetch
+
+  const refresh = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
     let ignore = false;
@@ -12,10 +15,8 @@ export function usePosts() {
     const fetchPosts = async () => {
       setLoading(true);
       setError(null);
-
       try {
         const data = await getPosts();
-
         if (ignore) return;
         setPosts(data || []);
         setLoading(false);
@@ -28,11 +29,8 @@ export function usePosts() {
     };
 
     fetchPosts();
+    return () => { ignore = true; };
+  }, [tick]); // re-runs when tick changes
 
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  return { posts, isLoading, error };
+  return { posts, isLoading, error, refresh };
 }

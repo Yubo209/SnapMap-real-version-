@@ -31,7 +31,7 @@ const Dashboard = () => {
     localStorage.getItem('avatarUrl') || DEFAULT_AVATAR
   );
 
-  const { posts = [], isLoading: postsLoading, error: postsError } = usePosts();
+  const { posts = [], isLoading: postsLoading, error: postsError, refresh } = usePosts();
 
   useEffect(() => { setSection(sectionFromUrl); }, [sectionFromUrl]);
 
@@ -75,10 +75,17 @@ const Dashboard = () => {
     setSearchParams(next);
   };
 
+  /* Close PostModal + refresh posts so likes/comments are up to date */
   const closePostModal = () => {
     const next = new URLSearchParams(searchParams);
     next.delete('post');
     setSearchParams(next);
+    refresh(); // re-fetch posts after modal closes
+  };
+
+  /* Called by UploadPost on success — refresh without leaving the page */
+  const handleUploadSuccess = () => {
+    refresh();
   };
 
   const renderSection = () => {
@@ -93,7 +100,7 @@ const Dashboard = () => {
         return (
           <>
             <h2 className="section-title">Upload a spot</h2>
-            <UploadPost />
+            <UploadPost onSuccess={handleUploadSuccess} />
           </>
         );
       case 'posts':
@@ -119,19 +126,13 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
 
-      {/* ── Header ── */}
       <header className="dashboard-header">
         <div className="brand" onClick={() => updateSection('map')}>
           <img src="/spotmap-icon.svg" alt="SnapMap" className="brand-icon" />
           <span className="brand-name">SnapMap</span>
         </div>
-
         <div className="header-right">
-          <button
-            className="btn-ghost"
-            onClick={() => updateSection('myprofile')}
-            aria-label="My profile"
-          >
+          <button className="btn-ghost" onClick={() => updateSection('myprofile')} aria-label="My profile">
             <User size={13} strokeWidth={1.5} />
             Profile
           </button>
@@ -144,10 +145,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* ── Body ── */}
       <div className="dashboard-body">
-
-        {/* Sidebar */}
         <nav className="dashboard-sidebar">
           <ul>
             {NAV_ITEMS.map(({ key, label, Icon }) => (
@@ -163,15 +161,11 @@ const Dashboard = () => {
           </ul>
         </nav>
 
-        {/* Main */}
-        <main
-          className={`dashboard-feed${section === 'map' ? ' dashboard-feed--map' : ''}`}
-        >
+        <main className={`dashboard-feed${section === 'map' ? ' dashboard-feed--map' : ''}`}>
           {renderSection()}
         </main>
       </div>
 
-      {/* ── Mobile bottom nav ── */}
       <nav className="mobile-bottom-nav">
         {NAV_ITEMS.map(({ key, label, Icon }) => (
           <button
@@ -192,7 +186,6 @@ const Dashboard = () => {
         </button>
       </nav>
 
-      {/* ── Post modal ── */}
       {selectedPost && (
         <PostModal post={selectedPost} onClose={closePostModal} />
       )}
