@@ -158,12 +158,12 @@ html {
 }
 
 body {
-  /* Extend into safe-area (notch, home indicator) */
+  /* Extend into safe-area (notch, home indicator) ss*/
   padding-top:    env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left:   env(safe-area-inset-left);
   padding-right:  env(safe-area-inset-right);
-  overscroll-behavior: none;
+  overscroll-behavior: none; 
 }
 
 /* On mobile, use dvh (dynamic viewport height) so height tracks
