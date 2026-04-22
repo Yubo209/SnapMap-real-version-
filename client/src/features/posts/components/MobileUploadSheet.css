@@ -1,0 +1,241 @@
+/* ─── MobileUploadSheet ─────────────────────────────────────────── */
+
+.mus-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(0,0,0,0.52);
+  display: flex;
+  align-items: flex-end;
+  animation: mus-bg-in 220ms ease both;
+}
+@keyframes mus-bg-in { from { opacity:0; } to { opacity:1; } }
+
+.mus-sheet {
+  width: 100%;
+  max-height: 94dvh;
+  background: var(--surface);
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: mus-up 320ms cubic-bezier(.25,1,.5,1) both;
+}
+@keyframes mus-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0);    }
+}
+
+/* Drag handle */
+.mus-handle {
+  width: 34px; height: 4px;
+  background: var(--border-strong);
+  border-radius: 2px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+/* ═══════ PICK STEP ═══════ */
+.mus-pick {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.mus-pick-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: -0.025em;
+  text-align: center;
+  padding: 14px 0 8px;
+  margin: 0;
+}
+
+.mus-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 120ms ease;
+}
+.mus-pick-row:active { background: var(--surface-2); }
+
+.mus-pick-icon {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--fg);
+}
+.mus-pick-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  flex: 1;
+}
+.mus-pick-label-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mus-pick-sub {
+  font-size: 12px;
+  color: var(--fg-3);
+  font-family: var(--font-sans);
+}
+.mus-pick-chevron { color: var(--fg-3); flex-shrink: 0; }
+
+.mus-cancel {
+  margin: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  height: 52px;
+  background: var(--surface-2);
+  border: none; border-radius: 14px;
+  font-family: var(--font-sans); font-size: 16px; font-weight: 500;
+  color: var(--fg); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 120ms ease;
+}
+.mus-cancel:active { background: var(--surface-3); }
+
+/* ═══════ SHARED NAV BAR ═══════ */
+.mus-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.mus-nav-title {
+  font-size: 15px; font-weight: 500;
+  color: var(--fg); letter-spacing: -0.02em;
+}
+.mus-nav-back,
+.mus-nav-next {
+  background: transparent; border: none;
+  font-family: var(--font-sans); font-size: 14px;
+  cursor: pointer; padding: 4px 0; min-width: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+.mus-nav-back  { color: var(--fg-2); font-weight: 400; text-align: left; }
+.mus-nav-next  { color: var(--fg);   font-weight: 600; text-align: right; }
+.mus-nav-back:active,
+.mus-nav-next:active { opacity: 0.5; }
+
+/* ═══════ CROP STEP ═══════ */
+.mus-crop { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.mus-crop-stage {
+  flex: 1; min-height: 0;
+  background: #000;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.mus-crop-img { max-width: 100%; max-height: 62dvh; display: block; }
+
+/* react-image-crop overrides */
+.mus-crop-stage .ReactCrop { max-height: 62dvh; }
+.mus-crop-stage .ReactCrop__crop-selection {
+  border: 2px solid rgba(255,255,255,0.9);
+  box-shadow: 0 0 0 9999em rgba(0,0,0,0.5);
+}
+.mus-crop-stage .ReactCrop__drag-handle::after {
+  background: #fff; border: none;
+  width: 10px; height: 10px; border-radius: 50%;
+}
+
+.mus-crop-hint {
+  text-align: center; font-size: 12px; color: var(--fg-3);
+  padding: 10px 0 12px; margin: 0; flex-shrink: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ═══════ DETAILS STEP ═══════ */
+.mus-details { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.mus-details-scroll {
+  flex: 1; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+.mus-details-top {
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.mus-thumb {
+  width: 88px; height: 88px;
+  border-radius: 10px; object-fit: cover;
+  border: 1px solid var(--border); flex-shrink: 0;
+}
+.mus-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+
+.mus-input {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color var(--t-base) var(--ease);
+  box-sizing: border-box;
+}
+.mus-input::placeholder { color: var(--fg-3); }
+.mus-input:focus { border-color: var(--fg); background: var(--surface); }
+.mus-input--name { font-weight: 500; font-size: 15px; }
+
+.mus-textarea {
+  resize: none;
+  line-height: 1.55;
+  min-height: 90px;
+}
+
+.mus-error {
+  font-size: 13px;
+  color: var(--danger, #dc2626);
+  margin: 0;
+}
+
+/* ═══════ UPLOADING STEP ═══════ */
+.mus-uploading {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 18px;
+  padding: 48px 32px calc(48px + env(safe-area-inset-bottom));
+  flex: 1;
+}
+.mus-upload-thumb {
+  width: 110px; height: 110px;
+  border-radius: 14px; object-fit: cover;
+  border: 1px solid var(--border);
+}
+.mus-upload-label {
+  font-size: 16px; font-weight: 500;
+  color: var(--fg); margin: 0;
+  letter-spacing: -0.02em;
+}
+.mus-progress-track {
+  width: 100%; height: 4px;
+  background: var(--surface-3, #e5e5e5);
+  border-radius: 2px; overflow: hidden;
+}
+.mus-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 130ms ease;
+}

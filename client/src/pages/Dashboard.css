@@ -221,12 +221,38 @@
     appearance: none; border: none; background: transparent;
     color: var(--fg-3);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 3px; padding: 6px 12px; cursor: pointer; min-width: 48px;
+    gap: 3px; padding: 6px 10px; cursor: pointer; flex: 1;
     transition: color var(--t-base) var(--ease);
+    -webkit-tap-highlight-color: transparent;
   }
   .mobile-bottom-nav button.active { color: var(--fg); }
   .mobile-bottom-nav button span {
     font-size: 9.5px; font-weight: 500;
     letter-spacing: .05em; text-transform: uppercase;
+  }
+
+  /* ── Center plus button — clean monochrome ── */
+  .mobile-nav-plus {
+    flex: 1;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    gap: 3px !important;
+  }
+  .mobile-nav-plus-inner {
+    width: 44px;
+    height: 28px;
+    background: var(--fg);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 120ms ease, opacity 120ms ease;
+  }
+  .mobile-nav-plus:active .mobile-nav-plus-inner {
+    transform: scale(0.88);
+    opacity: 0.75;
   }
 }

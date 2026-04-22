@@ -10,6 +10,7 @@ import { getMe } from '../api';
 import SettingsPage from '../components/Settings';
 import PostModal from '../features/posts/components/PostModal';
 import { usePosts } from '../features/posts/hooks/usePosts';
+import MobileUploadSheet from '../features/posts/components/MobileUploadSheet';
 
 const DEFAULT_AVATAR = '/default-avatar-icon-of-social-media-user-vector.jpg';
 
@@ -33,6 +34,13 @@ const Dashboard = () => {
 
   // Address pre-filled from map create-pin
   const [prefilledAddress, setPrefilledAddress] = useState('');
+
+  // Mobile upload sheet
+  const [sheetOpen,        setSheetOpen]        = useState(false);
+  const [sheetPrefillAddr, setSheetPrefillAddr] = useState('');
+
+  const isMobile = () =>
+    typeof window !== 'undefined' && window.innerWidth <= 768;
 
   const { posts = [], isLoading: postsLoading, error: postsError, refresh } = usePosts();
 
@@ -89,16 +97,30 @@ const Dashboard = () => {
     refresh();
   };
 
-  // From map create-pin: go to upload with address
+  // From map create-pin — sheet on mobile, section nav on desktop
   const handleCreateFromMap = (address) => {
-    // Store in sessionStorage so UploadPost can read it on mount
-    // even if React batches the state update after section change
-    if (address) sessionStorage.setItem('snapmap_prefill_address', address);
-    setPrefilledAddress(address || '');
-    const next = new URLSearchParams(searchParams);
-    next.set('section', 'upload');
-    next.delete('post');
-    setSearchParams(next);
+    if (isMobile()) {
+      setSheetPrefillAddr(address || '');
+      if (address) sessionStorage.setItem('snapmap_prefill_address', address);
+      setSheetOpen(true);
+    } else {
+      if (address) sessionStorage.setItem('snapmap_prefill_address', address);
+      setPrefilledAddress(address || '');
+      const next = new URLSearchParams(searchParams);
+      next.set('section', 'upload');
+      next.delete('post');
+      setSearchParams(next);
+    }
+  };
+
+  // Upload button — sheet on mobile, section nav on desktop
+  const handleUploadClick = () => {
+    if (isMobile()) {
+      setSheetPrefillAddr('');
+      setSheetOpen(true);
+    } else {
+      updateSection('upload');
+    }
   };
 
   // PostModal "On Map": close modal, go to map, open that post's mini card
@@ -178,7 +200,7 @@ const Dashboard = () => {
               <li
                 key={key}
                 className={section === key ? 'active' : ''}
-                onClick={() => updateSection(key)}
+                onClick={() => key === 'upload' ? handleUploadClick() : updateSection(key)}
               >
                 <Icon size={15} strokeWidth={1.5} className="nav-icon" />
                 {label}
@@ -193,24 +215,44 @@ const Dashboard = () => {
       </div>
 
       <nav className="mobile-bottom-nav">
-        {NAV_ITEMS.map(({ key, label, Icon }) => (
-          <button
-            key={key}
-            className={section === key ? 'active' : ''}
-            onClick={() => updateSection(key)}
-          >
-            <Icon size={19} strokeWidth={1.5} />
-            <span>{label}</span>
-          </button>
-        ))}
-        <button
-          className={section === 'myprofile' ? 'active' : ''}
-          onClick={() => updateSection('myprofile')}
-        >
-          <User size={19} strokeWidth={1.5} />
+        {/* Map */}
+        <button className={section === 'map' ? 'active' : ''} onClick={() => updateSection('map')}>
+          <MapPin size={22} strokeWidth={1.5} />
+          <span>Map</span>
+        </button>
+        {/* Spots */}
+        <button className={section === 'posts' ? 'active' : ''} onClick={() => updateSection('posts')}>
+          <Images size={22} strokeWidth={1.5} />
+          <span>Spots</span>
+        </button>
+        {/* Center plus */}
+        <button className="mobile-nav-plus" onClick={handleUploadClick} aria-label="Create post">
+          <div className="mobile-nav-plus-inner">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5"  y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+        </button>
+        {/* Settings */}
+        <button className={section === 'settings' ? 'active' : ''} onClick={() => updateSection('settings')}>
+          <SlidersHorizontal size={22} strokeWidth={1.5} />
+          <span>Settings</span>
+        </button>
+        {/* Profile */}
+        <button className={section === 'myprofile' ? 'active' : ''} onClick={() => updateSection('myprofile')}>
+          <User size={22} strokeWidth={1.5} />
           <span>Profile</span>
         </button>
       </nav>
+
+      {/* Mobile upload sheet */}
+      <MobileUploadSheet
+        isOpen={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onSuccess={() => { refresh(); setSheetOpen(false); }}
+        prefilledAddress={sheetPrefillAddr}
+      />
 
       {selectedPost && (
         <PostModal
