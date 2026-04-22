@@ -11,13 +11,20 @@ import { useSearchParams } from "react-router-dom";
 import "../../../style/mapview.css";
 import { usePosts } from "../hooks/usePosts";
 import { useUserLocation } from "../hooks/useUserLocation";
+import MapViewSearch from "./MapViewSearch";
 
 const MAPBOX_TOKEN     = import.meta.env.VITE_MAPBOX_TOKEN;
 const INITIAL_VIEW     = { longitude: -98.5795, latitude: 39.8283, zoom: 2 };
 const USER_ZOOM        = 12;
 const NEARBY_RADIUS_KM = 80;
 const FOCUS_ZOOM       = 15;
-const MAP_STYLE        = "mapbox://styles/mapbox/light-v11";
+const MAP_STYLES = {
+  light:  "mapbox://styles/mapbox/light-v11",
+  dark:   "mapbox://styles/mapbox/dark-v11",
+  street: "mapbox://styles/mapbox/streets-v12",
+  satell: "mapbox://styles/mapbox/satellite-v9",
+};
+const MAP_STYLE_DEFAULT = "light";
 
 function getDistanceKm(lat1, lng1, lat2, lng2) {
   const toRad = (v) => (v * Math.PI) / 180;
@@ -126,6 +133,7 @@ export default function MapView({ onCreateFromMap }) {
 
   const focusPostId = searchParams.get("focusPost") || "";
 
+  const [mapStyle, setMapStyle] = useState(MAP_STYLE_DEFAULT);
   const [viewState,       setViewState]       = useState(INITIAL_VIEW);
   const [popupStep,       setPopupStep]       = useState(null);
   const [activePost,      setActivePost]      = useState(null);
@@ -135,10 +143,19 @@ export default function MapView({ onCreateFromMap }) {
   const [pinAddrLoading,  setPinAddrLoading]  = useState(false);
   const [showPinTooltip,  setShowPinTooltip]  = useState(false);
 
+  /* ── Refs ──────────────────────────────────────────────────────── */
   const previousViewRef   = useRef(null);
   const mapRef            = useRef(null);
   const mapLoadedRef      = useRef(false);
-  const initialFlyDoneRef = useRef(false); // resets each mount
+  const pendingFocusRef   = useRef(null);
+  
+  // Track if we've done the first auto-fly to user location
+  // Separate from focusPost navigation — they shouldn't interfere
+  const hasAutoFlyToUserRef = useRef(
+    typeof window !== 'undefined' 
+      ? window.__snapmap_has_auto_fly_to_user__ 
+      : false
+  );
 
   /* ── Derived ──────────────────────────────────────────────────── */
   const valid = useMemo(
@@ -213,7 +230,7 @@ export default function MapView({ onCreateFromMap }) {
     setPopupStep("mini");
   }, []);
 
-  /* ── Map load ─────────────────────────────────────────────────── */
+  /* ── Map load ──────────────────────────────────────────────────── */
   const handleMapLoad = useCallback(() => {
     mapLoadedRef.current = true;
 
@@ -225,26 +242,27 @@ export default function MapView({ onCreateFromMap }) {
       if (c) previousViewRef.current = { longitude: c.lng, latitude: c.lat, zoom: mapRef.current.getZoom() };
       flyTo(post.lng, post.lat, FOCUS_ZOOM, 800);
       setTimeout(() => openMini(post, false), 850);
-      return;
     }
+  }, [flyTo, openMini]);
 
-    // Auto fly to user location on every map mount
-    if (userLocation && !initialFlyDoneRef.current) {
-      initialFlyDoneRef.current = true;
-      flyTo(userLocation.lng, userLocation.lat, USER_ZOOM, 1200);
-      setShowYouAreHere(true);
-      setTimeout(() => setShowYouAreHere(false), 3000);
-    }
-  }, [userLocation, flyTo, openMini]);
-
-  /* ── Location arrives ─────────────────────────────────────────── */
+  /* ── Auto fly to user on first app load (when location ready) ───── */
   useEffect(() => {
-    if (!userLocation || focusPostId || initialFlyDoneRef.current || !mapLoadedRef.current) return;
-    initialFlyDoneRef.current = true;
-    flyTo(userLocation.lng, userLocation.lat, USER_ZOOM, 1200);
+    if (!userLocation || !mapLoadedRef.current || hasAutoFlyToUserRef.current) return;
+    
+    hasAutoFlyToUserRef.current = true;
+    if (typeof window !== 'undefined') {
+      window.__snapmap_has_auto_fly_to_user__ = true;
+    }
+    
+    mapRef.current?.flyTo({
+      center: [userLocation.lng, userLocation.lat],
+      zoom: USER_ZOOM,
+      duration: 1200,
+      essential: true,
+    });
     setShowYouAreHere(true);
     setTimeout(() => setShowYouAreHere(false), 3000);
-  }, [userLocation, focusPostId, flyTo]);
+  }, [userLocation]);
 
   /* ── FitBounds ────────────────────────────────────────────────── */
   useEffect(() => {
@@ -258,9 +276,6 @@ export default function MapView({ onCreateFromMap }) {
   }, [valid, userLocation, focusPostId, flyTo]);
 
   /* ── Focus post from URL — fly + open mini card ───────────────── */
-  // Store pending focusedPost so onLoad can pick it up if map isn't ready yet
-  const pendingFocusRef = useRef(null);
-
   useEffect(() => {
     if (!focusedPost) return;
     if (mapLoadedRef.current) {
@@ -322,6 +337,16 @@ export default function MapView({ onCreateFromMap }) {
     setSearchParams(params);
   };
 
+  const handleSearchSelectPost = (post) => {
+    // Fly to post and open mini card
+    if (mapRef.current && !previousViewRef.current) {
+      const c = mapRef.current.getCenter();
+      previousViewRef.current = { longitude: c.lng, latitude: c.lat, zoom: mapRef.current.getZoom() };
+    }
+    mapRef.current?.flyTo({ center: [post.lng, post.lat], zoom: FOCUS_ZOOM, duration: 800, essential: true });
+    setTimeout(() => { setActivePost(post); setPopupStep("mini"); }, 850);
+  };
+
   const handleResetToMyLocation = () => {
     if (userLocation) flyTo(userLocation.lng, userLocation.lat, USER_ZOOM, 1000);
   };
@@ -354,7 +379,23 @@ export default function MapView({ onCreateFromMap }) {
       {locationLoading && <p className="map-status">Locating you…</p>}
       {!locationLoading && locationError && <p className="map-status map-status-muted">{locationError}</p>}
 
+      {/* Search bar */}
+      <MapViewSearch posts={valid} onSelectPost={handleSearchSelectPost} />
+
       <div className="mapview-stage">
+        {/* Map style picker */}
+        <div className="map-style-picker" style={{ display: 'none' }}>
+          {Object.entries(MAP_STYLES).map(([key, url]) => (
+            <button
+              key={key}
+              className={`map-style-btn${mapStyle === key ? ' active' : ''}`}
+              onClick={() => setMapStyle(key)}
+            >
+              {key.charAt(0).toUpperCase() + key.slice(1)}
+            </button>
+          ))}
+        </div>
+        
         <Map
           ref={mapRef}
           {...viewState}
@@ -362,7 +403,7 @@ export default function MapView({ onCreateFromMap }) {
           onDragStart={handleDragStart}
           onLoad={handleMapLoad}
           style={{ width: "100%", height: "100%" }}
-          mapStyle={MAP_STYLE}
+          mapStyle={MAP_STYLES[mapStyle]}
           mapboxAccessToken={MAPBOX_TOKEN}
           attributionControl={false}
           logoPosition="bottom-right"

@@ -1,5 +1,5 @@
-
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './MyProfile.css';
 import { getMe, uploadImage, updateAvatar, deletePost } from '../api';
 
@@ -8,10 +8,11 @@ const MyProfile = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);  
   const [savingAvatar, setSavingAvatar] = useState(false);
-  const [deletingId, setDeletingId] = useState(null); 
+  const [deletingId, setDeletingId] = useState(null);
+  const [activeTab, setActiveTab] = useState('posts'); // 'posts' or 'likes'
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
 
-  
   useEffect(() => {
     (async () => {
       try {
@@ -24,7 +25,7 @@ const MyProfile = () => {
         }
       } catch (err) {
         console.error('Failed to load profile', err);
-        setMessage(' Failed to load profile. Please re-login.');
+        setMessage('Failed to load profile. Please re-login.');
       } finally {
         setLoading(false);
       }
@@ -33,7 +34,6 @@ const MyProfile = () => {
 
   const handleAvatarClick = () => fileInputRef.current?.click();
 
-  
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -41,60 +41,60 @@ const MyProfile = () => {
     setMessage('');
 
     try {
-      
       const up = await uploadImage(file, 'snapmap/avatars'); 
-
-      
       await updateAvatar({ avatarUrl: up.url, avatarPublicId: up.public_id });
-
-      
       setUser(prev => ({ ...prev, avatarUrl: up.url }));
       setMessage('Avatar updated successfully!');
-
-      
       localStorage.setItem('avatarUrl', up.url);                                      
       window.dispatchEvent(new CustomEvent('avatar-updated', { detail: up.url }));    
     } catch (err) {
       console.error('Avatar update error:', err);
-      setMessage(' Failed to update avatar.');
+      setMessage('Failed to update avatar.');
     } finally {
       setSavingAvatar(false);
-       
       e.target.value = '';
     }
   };
 
-  
   const handleDeletePost = async (postId) => {
-    const yes = window.confirm('Delete this post? This post will be permanently deleted.');
+    const yes = window.confirm('Delete this post? This cannot be undone.');
     if (!yes) return;
 
     setMessage('');
     setDeletingId(postId);
     try {
       await deletePost(postId);
-
-      
       setUser(prev => ({
         ...prev,
         posts: (prev.posts || []).filter(p => p._id !== postId)
       }));
-      setMessage(' Post deleted.');
+      setMessage('Post deleted successfully.');
     } catch (err) {
       console.error('Delete post error:', err);
-      setMessage(' Failed to delete post.');
+      setMessage('Failed to delete post.');
     } finally {
       setDeletingId(null);
     }
   };
 
-  if (loading) return <p style={{ padding: '1rem' }}>Loading...</p>;
+  const handleLogout = () => {
+    const yes = window.confirm('Log out from SnapMap?');
+    if (!yes) return;
+    localStorage.removeItem('token');
+    localStorage.removeItem('me');
+    localStorage.removeItem('avatarUrl');
+    navigate('/', { replace: true });
+  };
+
+  if (loading) return <p style={{ padding: '1rem' }}>Loading profile...</p>;
   if (!user) return <p style={{ padding: '1rem' }}>Not logged in.</p>;
+
+  const likedPosts = user.likedPosts || [];
+  const uploadedPosts = user.posts || [];
 
   return (
     <div className="myprofile-container">
-      <h2 className="myprofile-header">My Profile</h2>
-
+      {/* Header */}
       <div className="myprofile-header">
         <img
           src={user.avatarUrl || '/default-avatar-icon-of-social-media-user-vector.jpg'}
@@ -112,52 +112,90 @@ const MyProfile = () => {
           onChange={handleAvatarChange}
           disabled={savingAvatar}
         />
-        <div>
+        <div className="myprofile-header-info">
           <p className="myprofile-username">{user.username}</p>
-          <p>{user.email}</p>
+          <p className="myprofile-email">{user.email}</p>
         </div>
+        <button className="myprofile-logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
       </div>
 
-      {message && <p className="myprofile-message" style={{ marginTop: 8 }}>{message}</p>}
+      {message && <p className={`myprofile-message ${message.includes('successfully') ? 'success' : 'error'}`}>{message}</p>}
 
-      <h3 className="myprofile-posts-title">My Uploaded Posts</h3>
+      {/* Tabs */}
+      <div className="myprofile-tabs">
+        <button
+          className={`myprofile-tab ${activeTab === 'posts' ? 'active' : ''}`}
+          onClick={() => setActiveTab('posts')}
+        >
+          My Posts ({uploadedPosts.length})
+        </button>
+        <button
+          className={`myprofile-tab ${activeTab === 'likes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('likes')}
+        >
+          Liked ({likedPosts.length})
+        </button>
+      </div>
 
-      <div className="myprofile-posts">
-        {user.posts && user.posts.length > 0 ? (
-          user.posts.map((post) => (
-            <div key={post._id} className="myprofile-post-card">
-              {post.imageUrl && (
-                <img src={post.imageUrl} alt={post.name} className="myprofile-post-image" />
-              )}
-              <div className="myprofile-post-info">
-                <h4>{post.name}</h4>
-                <p>{post.description}</p>
-                <small>{post.address}</small>
-
-                <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                  <button
-                    onClick={() => handleDeletePost(post._id)}
-                    disabled={deletingId === post._id}
-                    style={{
-                      padding: '6px 10px',
-                      borderRadius: 6,
-                      border: '1px solid #e33',
-                      background: deletingId === post._id ? '#f8d7da' : '#fff',
-                      color: '#e33',
-                      cursor: deletingId === post._id ? 'not-allowed' : 'pointer'
-                    }}
-                    title="Delete this post"
-                  >
-                    {deletingId === post._id ? 'Deleting…' : 'Delete'}
-                  </button>
+      {/* Posts Tab */}
+      {activeTab === 'posts' && (
+        <div>
+          <div className="myprofile-posts">
+            {uploadedPosts.length > 0 ? (
+              uploadedPosts.map((post) => (
+                <div key={post._id} className="myprofile-post-card">
+                  {post.imageUrl && (
+                    <img src={post.imageUrl} alt={post.name} className="myprofile-post-image" />
+                  )}
+                  <div className="myprofile-post-info">
+                    <h4>{post.name}</h4>
+                    <p>{post.description}</p>
+                    <small className="myprofile-post-address">{post.address}</small>
+                    <div className="myprofile-post-actions">
+                      <button
+                        className="myprofile-delete-btn"
+                        onClick={() => handleDeletePost(post._id)}
+                        disabled={deletingId === post._id}
+                      >
+                        {deletingId === post._id ? 'Deleting…' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p>No posts uploaded yet.</p>
-        )}
-      </div>
+              ))
+            ) : (
+              <p className="myprofile-empty">No posts uploaded yet. Start by uploading a spot!</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Likes Tab */}
+      {activeTab === 'likes' && (
+        <div>
+          <div className="myprofile-posts">
+            {likedPosts.length > 0 ? (
+              likedPosts.map((post) => (
+                <div key={post._id} className="myprofile-post-card">
+                  {post.imageUrl && (
+                    <img src={post.imageUrl} alt={post.name} className="myprofile-post-image" />
+                  )}
+                  <div className="myprofile-post-info">
+                    <h4>{post.name}</h4>
+                    <p>{post.description}</p>
+                    <small className="myprofile-post-address">{post.address}</small>
+                    <small className="myprofile-post-by">by {post.userId?.username || 'Unknown'}</small>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="myprofile-empty">You haven't liked any posts yet.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

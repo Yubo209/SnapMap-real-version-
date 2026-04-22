@@ -18,6 +18,10 @@ export default function Settings() {
           <button 
             className="btn btn-ghost" 
             onClick={toggleTheme}
+            style={{
+              backgroundColor: theme === "dark" ? "var(--surface-2)" : "var(--surface-2)",
+              borderColor: "var(--border-strong)",
+            }}
           >
             {theme === "dark" ? "Light" : "Dark"}
           </button>

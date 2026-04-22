@@ -1,0 +1,208 @@
+/* ─── Map View Search ────────────────────────────────────────────── */
+
+.mapview-search-container {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  width: min(360px, calc(100% - 28px));
+}
+
+.mapview-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--t-base) var(--ease), border-color var(--t-base) var(--ease);
+}
+
+.mapview-search-box:focus-within {
+  box-shadow: var(--shadow-md);
+  border-color: var(--fg);
+}
+
+.mapview-search-icon {
+  flex-shrink: 0;
+  color: var(--fg-3);
+  transition: color var(--t-base) var(--ease);
+}
+
+.mapview-search-box:focus-within .mapview-search-icon {
+  color: var(--fg-2);
+}
+
+.mapview-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  letter-spacing: -0.01em;
+}
+
+.mapview-search-input::placeholder {
+  color: var(--fg-3);
+}
+
+.mapview-search-clear {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--fg-3);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--t-fast) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mapview-search-clear:hover {
+  color: var(--fg-2);
+}
+
+/* Results dropdown — slide up from below */
+.mapview-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: search-slide-up 280ms cubic-bezier(.25,1,.5,1) both;
+}
+
+@keyframes search-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mapview-search-result-item {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 11px 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mapview-search-result-item:last-child {
+  border-bottom: none;
+}
+
+.mapview-search-result-item:hover,
+.mapview-search-result-item.active {
+  background: var(--surface-2);
+}
+
+.result-item-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-item-addr {
+  font-size: 12px;
+  color: var(--fg-3);
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Empty state */
+.mapview-search-empty {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  text-align: center;
+  color: var(--fg-3);
+  font-size: 13px;
+  animation: search-slide-up 280ms cubic-bezier(.25,1,.5,1) both;
+}
+
+.mapview-search-empty p {
+  margin: 0;
+}
+
+/* Scrollbar */
+.mapview-search-results::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mapview-search-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mapview-search-results::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: 2px;
+}
+
+.mapview-search-results::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-3);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .mapview-search-container {
+    width: calc(100% - 16px);
+    top: 10px;
+  }
+
+  .mapview-search-box {
+    height: 38px;
+    font-size: 13px;
+  }
+
+  .mapview-search-results {
+    max-height: 280px;
+    margin-top: 6px;
+  }
+
+  .result-item-name {
+    font-size: 13px;
+  }
+
+  .result-item-addr {
+    font-size: 11.5px;
+  }
+}

@@ -5,8 +5,24 @@ const AVATAR_FALLBACK = "/default-avatar-icon-of-social-media-user-vector.jpg";
 
 function extractCityFromAddress(address = "") {
   const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+  // Try to find city (usually second-to-last part before state/country)
   if (parts.length >= 2) return parts[parts.length - 2];
-  return "Unknown";
+  if (parts.length === 1) return parts[0];
+  return "";
+}
+
+function extractLandmarks(address = "") {
+  // Extract key landmarks: National Parks, State Parks, Cities, etc.
+  const keywords = [
+    'National Park', 'State Park', 'Provincial Park',
+    'Park', 'Forest', 'Monument', 'Preserve',
+    'Beach', 'Canyon', 'Lake', 'Mountain',
+  ];
+  const found = [];
+  for (const kw of keywords) {
+    if (address.includes(kw)) found.push(kw);
+  }
+  return found;
 }
 
 export default function AllSpots({
@@ -21,37 +37,27 @@ export default function AllSpots({
      Any URL write causes Dashboard to re-render → AllSpots re-mounts
      → input loses focus. Keep search 100% in component memory.     */
   const [search,     setSearch]     = useState(initialSearch);
-  const [cityFilter, setCityFilter] = useState(initialCity);
+
 
   const handleClearFilters = () => {
     setSearch("");
-    setCityFilter("All");
   };
 
   /* ── Derived data ───────────────────────────────────────────────── */
-  const cityOptions = useMemo(() => {
-    const cities = new Set();
-    (posts || []).forEach((post) => {
-      const city = extractCityFromAddress(post.address || "");
-      if (city && city !== "Unknown") cities.add(city);
-    });
-    return ["All", ...Array.from(cities).sort()];
-  }, [posts]);
+
 
   const filteredPosts = useMemo(() => {
     return (posts || []).filter((post) => {
       const name    = (post.name        || "").toLowerCase();
       const desc    = (post.description || "").toLowerCase();
       const address = (post.address     || "").toLowerCase();
-      const city    = extractCityFromAddress(post.address || "");
       const q       = search.trim().toLowerCase();
-      const matchKeyword = !q || name.includes(q) || desc.includes(q) || address.includes(q);
-      const matchCity    = cityFilter === "All" || city === cityFilter;
-      return matchKeyword && matchCity;
+      // Match by name, description, or address
+      return !q || name.includes(q) || desc.includes(q) || address.includes(q);
     });
-  }, [posts, search, cityFilter]);
+  }, [posts, search]);
 
-  const hasActiveFilters = search.trim() !== "" || cityFilter !== "All";
+  const hasActiveFilters = search.trim() !== "";
 
   /* ── Render ─────────────────────────────────────────────────────── */
   if (isLoading) {
@@ -93,17 +99,7 @@ export default function AllSpots({
           spellCheck={false}
         />
 
-        <select
-          value={cityFilter}
-          onChange={(e) => setCityFilter(e.target.value)}
-          className="allspots-select"
-        >
-          {cityOptions.map((city) => (
-            <option key={city} value={city}>{city}</option>
-          ))}
-        </select>
-
-        {hasActiveFilters && (
+{hasActiveFilters && (
           <button type="button" className="allspots-clear-btn" onClick={handleClearFilters}>
             × Clear
           </button>
