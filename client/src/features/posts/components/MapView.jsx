@@ -10,8 +10,9 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { useSearchParams } from "react-router-dom";
 import "../../../style/mapview.css";
 import { usePosts } from "../hooks/usePosts";
-import { useUserLocation } from "../hooks/useUserLocation";
 import MapViewSearch from "./MapViewSearch";
+import { useUserLocation } from "../hooks/useUserLocation";
+
 
 const MAPBOX_TOKEN     = import.meta.env.VITE_MAPBOX_TOKEN;
 const INITIAL_VIEW     = { longitude: -98.5795, latitude: 39.8283, zoom: 2 };
