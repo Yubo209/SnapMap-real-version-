@@ -71,7 +71,7 @@ export default function MapViewSearch({ posts, onSelectPost }) {
         setQuery("");
         break;
       default:
-        break;
+        break; 
     }
   };
 
