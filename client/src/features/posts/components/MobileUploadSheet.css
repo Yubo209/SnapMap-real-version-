@@ -188,7 +188,7 @@
   background: var(--surface-2);
   color: var(--fg);
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 16px;
   outline: none;
   -webkit-appearance: none;
   transition: border-color var(--t-base) var(--ease);
