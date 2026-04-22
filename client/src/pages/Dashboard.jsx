@@ -31,6 +31,9 @@ const Dashboard = () => {
     localStorage.getItem('avatarUrl') || DEFAULT_AVATAR
   );
 
+  // Address pre-filled from map create-pin
+  const [prefilledAddress, setPrefilledAddress] = useState('');
+
   const { posts = [], isLoading: postsLoading, error: postsError, refresh } = usePosts();
 
   useEffect(() => { setSection(sectionFromUrl); }, [sectionFromUrl]);
@@ -75,17 +78,36 @@ const Dashboard = () => {
     setSearchParams(next);
   };
 
-  /* Close PostModal + refresh posts so likes/comments are up to date */
   const closePostModal = () => {
     const next = new URLSearchParams(searchParams);
     next.delete('post');
     setSearchParams(next);
-    refresh(); // re-fetch posts after modal closes
+    refresh();
   };
 
-  /* Called by UploadPost on success — refresh without leaving the page */
   const handleUploadSuccess = () => {
     refresh();
+  };
+
+  // From map create-pin: go to upload with address
+  const handleCreateFromMap = (address) => {
+    // Store in sessionStorage so UploadPost can read it on mount
+    // even if React batches the state update after section change
+    if (address) sessionStorage.setItem('snapmap_prefill_address', address);
+    setPrefilledAddress(address || '');
+    const next = new URLSearchParams(searchParams);
+    next.set('section', 'upload');
+    next.delete('post');
+    setSearchParams(next);
+  };
+
+  // PostModal "On Map": close modal, go to map, open that post's mini card
+  const handleViewOnMap = (postId) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('section', 'map');
+    next.set('focusPost', postId);
+    next.delete('post');
+    setSearchParams(next);
   };
 
   const renderSection = () => {
@@ -93,14 +115,18 @@ const Dashboard = () => {
       case 'map':
         return (
           <div className="dashboard-map-section">
-            <MapView />
+            <MapView onCreateFromMap={handleCreateFromMap} />
           </div>
         );
       case 'upload':
         return (
           <>
             <h2 className="section-title">Upload a spot</h2>
-            <UploadPost onSuccess={handleUploadSuccess} />
+            <UploadPost
+              onSuccess={handleUploadSuccess}
+              prefilledAddress={prefilledAddress}
+              onAddressUsed={() => setPrefilledAddress('')}
+            />
           </>
         );
       case 'posts':
@@ -119,7 +145,7 @@ const Dashboard = () => {
       case 'myprofile':
         return <MyProfile />;
       default:
-        return <MapView />;
+        return <MapView onCreateFromMap={handleCreateFromMap} />;
     }
   };
 
@@ -187,7 +213,11 @@ const Dashboard = () => {
       </nav>
 
       {selectedPost && (
-        <PostModal post={selectedPost} onClose={closePostModal} />
+        <PostModal
+          post={selectedPost}
+          onClose={closePostModal}
+          onViewOnMap={handleViewOnMap}
+        />
       )}
     </div>
   );

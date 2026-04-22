@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useCreatePost } from '../hooks/useCreatePost';
 
-const UploadPost = ({ onSuccess }) => {
+const UploadPost = ({ onSuccess, prefilledAddress = '', onAddressUsed }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     address: '',
     image: null,
   });
-
   const [preview, setPreview] = useState(null);
   const [message, setMessage] = useState('');
-
   const { submitPost, loading, error } = useCreatePost();
+
+  // Track whether we've already applied this particular prefilledAddress
+  const lastAppliedRef = useRef('');
+
+  useEffect(() => {
+    // Try prop first, then sessionStorage fallback
+    const addr = prefilledAddress || sessionStorage.getItem('snapmap_prefill_address') || '';
+    if (addr && addr !== lastAppliedRef.current) {
+      lastAppliedRef.current = addr;
+      setFormData((prev) => ({ ...prev, address: addr }));
+      sessionStorage.removeItem('snapmap_prefill_address');
+      onAddressUsed?.();
+    }
+  }, [prefilledAddress, onAddressUsed]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,23 +39,16 @@ const UploadPost = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!formData.image) {
-      setMessage('Please select an image.');
-      return;
-    }
-
+    if (!formData.image) { setMessage('Please select an image.'); return; }
     setMessage('');
-
     try {
       await submitPost(formData);
       setMessage('Post uploaded successfully!');
       setFormData({ name: '', description: '', address: '', image: null });
       setPreview(null);
-
-      // Trigger AllSpots refresh without navigating away
+      lastAppliedRef.current = '';
       onSuccess?.();
-    } catch (err) {
+    } catch {
       setMessage('Failed to upload.');
     }
   };
@@ -81,15 +86,12 @@ const UploadPost = ({ onSuccess }) => {
           Upload Image:
           <input type="file" accept="image/*" onChange={handleImageChange} />
         </label>
-        {preview && (
-          <img src={preview} alt="Preview" style={{ width: '100%', marginTop: '10px' }} />
-        )}
+        {preview && <img src={preview} alt="Preview" style={{ width: '100%', marginTop: '10px' }} />}
         <br />
         <button type="submit" disabled={loading}>
           {loading ? 'Uploading…' : 'Submit Post'}
         </button>
       </form>
-
       {message && <p style={{ marginTop: '1rem' }}>{message}</p>}
       {error && <p style={{ marginTop: '0.5rem', color: 'red' }}>{error.message}</p>}
     </div>

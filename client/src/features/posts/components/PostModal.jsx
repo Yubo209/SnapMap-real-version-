@@ -1,15 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X, MapPinned, MessageCircle } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
 import { addComment, toggleLike } from "../../../api";
 import "../../../style/PostModal.css";
 
 const AVATAR_FALLBACK = "/default-avatar-icon-of-social-media-user-vector.jpg";
 
-export default function PostModal({ post, onClose }) {
-  const [, setSearchParams] = useSearchParams();
-  const [commentText, setCommentText] = useState("");
+export default function PostModal({ post, onClose, onViewOnMap }) {
+    const [commentText, setCommentText] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
   const [actionError, setActionError] = useState("");
   const [likePop, setLikePop] = useState(false);
@@ -77,10 +75,8 @@ export default function PostModal({ post, onClose }) {
   const avatarUrl = author.avatarUrl || AVATAR_FALLBACK;
 
   const handleViewOnMap = () => {
-    const next = new URLSearchParams();
-    next.set("section", "map");
-    next.set("focusPost", post._id);
-    setSearchParams(next);
+    onClose();                          // close modal first
+    onViewOnMap?.(post._id);            // let Dashboard handle navigation
   };
 
   const handleToggleLike = async () => {
