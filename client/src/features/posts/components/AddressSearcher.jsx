@@ -11,11 +11,20 @@ export default function AddressSearcher({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(-1);
   const [loading, setLoading] = useState(false);
+  const [userCoords, setUserCoords] = useState(currentLocation || null);
+  const [suggestions, setSuggestions] = useState([]);
   const debounceRef = useRef(null);
   const inputRef = useRef(null);
   const containerRef = useRef(null);
 
-  // Debounce address search
+  // Get user location (GPS only)
+  useEffect(() => {
+    if (currentLocation) {
+      setUserCoords(currentLocation);
+      console.log('📍 Using GPS location');
+    }
+  }, [currentLocation]);
+
   const handleInputChange = (e) => {
     const val = e.target.value;
     setQuery(val);
@@ -23,7 +32,7 @@ export default function AddressSearcher({
 
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      if (val.trim()) {
+      if (val.trim().length >= 2) { // Only search if 2+ chars
         setIsOpen(true);
       } else {
         setIsOpen(false);
@@ -31,12 +40,9 @@ export default function AddressSearcher({
     }, 150);
   };
 
-  // When input loses focus, submit the typed address
   const handleInputBlur = () => {
     if (query.trim()) {
-      // Delay slightly to let click-outside handler run first
       setTimeout(() => {
-        console.log('Input blur - submitting typed address:', query);
         if (onSelect) {
           onSelect(query);
         }
@@ -44,91 +50,54 @@ export default function AddressSearcher({
     }
   };
 
-  // Real search with debounce
+  // Fetch from Mapbox Autocomplete API
   useEffect(() => {
-    if (!query.trim()) {
+    if (!query.trim() || query.length < 2) {
       setIsOpen(false);
       return;
     }
 
-    const fetchAddresses = async () => {
+    const fetchAutocomplete = async () => {
       setLoading(true);
       try {
         const token = import.meta.env.VITE_MAPBOX_TOKEN;
         
-        const searches = [];
-        searches.push(
-          fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=5&types=address,place,poi`)
-        );
-        
-        if (/\d/.test(query)) {
-          searches.push(
-            fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query + ' street')}.json?access_token=${token}&limit=5&types=address`)
-          );
+        // Build proximity from user coords
+        let proximityParam = '';
+        if (userCoords) {
+          proximityParam = `&proximity=${userCoords.lng},${userCoords.lat}`;
         }
-        
-        searches.push(
-          fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=5&types=place,region`)
-        );
-        
-        const responses = await Promise.all(searches);
-        const allFeatures = [];
-        const seenIds = new Set();
-        
-        for (const res of responses) {
-          const data = await res.json();
-          if (data.features) {
-            for (const feature of data.features) {
-              if (!seenIds.has(feature.id)) {
-                allFeatures.push(feature);
-                seenIds.add(feature.id);
-              }
-            }
-          }
-        }
-        
-        // Smart ranking
-        const ranked = allFeatures.sort((a, b) => {
-          const aText = (a.place_name || '').toLowerCase();
-          const bText = (b.place_name || '').toLowerCase();
-          const q = query.toLowerCase();
-          
-          const aStartsWith = aText.startsWith(q) ? 1 : 0;
-          const bStartsWith = bText.startsWith(q) ? 1 : 0;
-          if (aStartsWith !== bStartsWith) return bStartsWith - aStartsWith;
-          
-          const aIsAddress = a.place_type?.includes('address') ? 1 : 0;
-          const bIsAddress = b.place_type?.includes('address') ? 1 : 0;
-          if (aIsAddress !== bIsAddress) return bIsAddress - aIsAddress;
-          
-          const aRelevance = a.relevance || 0;
-          const bRelevance = b.relevance || 0;
-          if (Math.abs(aRelevance - bRelevance) > 0.01) return bRelevance - aRelevance;
-          
-          return aText.length - bText.length;
-        });
-        
-        const topResults = ranked.slice(0, 8);
-        
-        if (topResults.length > 0) {
-          sessionStorage.setItem('__address_suggestions', JSON.stringify(topResults));
+
+        // Mapbox Autocomplete endpoint (part of Geocoding API)
+        // autocomplete=true enables autocomplete mode
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&autocomplete=true&limit=8${proximityParam}&types=address,place,region,poi`;
+
+        console.log('🔍 Searching:', query);
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.features && data.features.length > 0) {
+          console.log('✅ Found', data.features.length, 'suggestions');
+          setSuggestions(data.features);
           setIsOpen(true);
         } else {
+          console.log('❌ No suggestions found');
+          setSuggestions([]);
           setIsOpen(false);
         }
       } catch (err) {
-        console.error('Address search error:', err);
+        console.error('Autocomplete error:', err);
         setIsOpen(false);
       } finally {
         setLoading(false);
       }
     };
 
-    const timer = setTimeout(fetchAddresses, 300);
+    const timer = setTimeout(fetchAutocomplete, 300);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, userCoords]);
 
-  // Click outside to close dropdown
+  // Click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
@@ -140,15 +109,7 @@ export default function AddressSearcher({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Get suggestions from sessionStorage
-  const suggestions = useMemo(() => {
-    try {
-      const stored = sessionStorage.getItem('__address_suggestions');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  }, [isOpen]);
+
 
   const handleKeyDown = (e) => {
     if (!isOpen || suggestions.length === 0) {
@@ -185,23 +146,21 @@ export default function AddressSearcher({
   };
 
   const handleSelectAddress = (address) => {
-    console.log('Selected address:', address);
     setQuery(address);
     setIsOpen(false);
     setSelectedIdx(-1);
-    // Make sure onSelect is called
     if (onSelect) {
       onSelect(address);
     }
   };
 
   const handleCurrentLocation = async () => {
-    if (!currentLocation) return;
+    if (!userCoords) return;
     
     try {
       const token = import.meta.env.VITE_MAPBOX_TOKEN;
       const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${currentLocation.lng},${currentLocation.lat}.json?access_token=${token}&types=address&limit=1`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${userCoords.lng},${userCoords.lat}.json?access_token=${token}&types=address&limit=1`
       );
       const data = await res.json();
       
@@ -209,12 +168,12 @@ export default function AddressSearcher({
         const address = data.features[0].place_name;
         handleSelectAddress(address);
       } else {
-        const addr = `${currentLocation.lat.toFixed(5)}, ${currentLocation.lng.toFixed(5)}`;
+        const addr = `${userCoords.lat.toFixed(5)}, ${userCoords.lng.toFixed(5)}`;
         handleSelectAddress(addr);
       }
     } catch (err) {
       console.error('Reverse geocode error:', err);
-      const addr = `${currentLocation.lat.toFixed(5)}, ${currentLocation.lng.toFixed(5)}`;
+      const addr = `${userCoords.lat.toFixed(5)}, ${userCoords.lng.toFixed(5)}`;
       handleSelectAddress(addr);
     }
   };
@@ -234,7 +193,7 @@ export default function AddressSearcher({
           ref={inputRef}
           type="text"
           className="address-searcher-input"
-          placeholder="Search address..."
+          placeholder="Search address…"
           value={query}
           onChange={handleInputChange}
           onBlur={handleInputBlur}
@@ -253,7 +212,7 @@ export default function AddressSearcher({
         )}
       </div>
 
-      {currentLocation && (
+      {userCoords && !query && (
         <button 
           className="address-current-location"
           onClick={handleCurrentLocation}

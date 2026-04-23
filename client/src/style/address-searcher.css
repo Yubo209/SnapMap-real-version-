@@ -1,40 +1,51 @@
-/* ─── Address Searcher ──────────────────────────────────────────── */
+/* ─── Address Searcher ──────────────────────────────────────── */
 
 .address-searcher-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   position: relative;
-  width: 100%;
+  z-index: 10;
 }
 
 .address-searcher-box {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 0 12px;
-  height: 40px;
-  background: var(--surface-2);
+  height: 44px;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
+  background: var(--surface);
   transition: all var(--t-base) var(--ease);
 }
 
 .address-searcher-box:focus-within {
   border-color: var(--primary-blue);
-  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.08);
 }
 
 .address-searcher-icon {
   flex-shrink: 0;
   color: var(--fg-3);
+  transition: color var(--t-base) var(--ease);
+}
+
+.address-searcher-box:focus-within .address-searcher-icon {
+  color: var(--primary-blue);
 }
 
 .address-searcher-input {
   flex: 1;
+  height: 100%;
   border: none;
   background: transparent;
   color: var(--fg);
+  font-family: var(--font-sans);
   font-size: 16px;
   outline: none;
-  font-family: inherit;
+  -webkit-appearance: none;
 }
 
 .address-searcher-input::placeholder {
@@ -43,6 +54,8 @@
 
 .address-searcher-loading {
   flex-shrink: 0;
+  width: 16px;
+  height: 16px;
   color: var(--primary-blue);
   animation: spin 1s linear infinite;
 }
@@ -53,16 +66,26 @@
 }
 
 .address-searcher-clear {
-  appearance: none;
-  background: transparent;
-  border: none;
+  flex-shrink: 0;
+  width: auto;
+  height: auto;
+  padding: 4px;
   color: var(--fg-3);
   cursor: pointer;
-  padding: 4px;
+  background: none;
+  border: none;
   display: flex;
   align-items: center;
+  justify-content: center;
   -webkit-tap-highlight-color: transparent;
+  transition: color var(--t-base) var(--ease);
 }
+
+.address-searcher-clear:hover {
+  color: var(--fg);
+}
+
+/* ─── Current Location Button ──────────────────────────────── */
 
 .address-current-location {
   display: flex;
@@ -70,45 +93,44 @@
   gap: 8px;
   width: 100%;
   padding: 10px 12px;
-  margin-top: 6px;
-  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
+  background: var(--surface);
   color: var(--primary-blue);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--t-fast) var(--ease);
+  transition: all var(--t-base) var(--ease);
   -webkit-tap-highlight-color: transparent;
 }
 
 .address-current-location:hover {
-  background: var(--primary-blue);
-  color: white;
   border-color: var(--primary-blue);
+  background: rgba(0, 102, 255, 0.03);
 }
 
-/* Results dropdown */
+.address-current-location:active {
+  transform: scale(0.98);
+}
+
+/* ─── Results Dropdown ────────────────────────────────────── */
+
 .address-searcher-results {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 6px);
   left: 0;
   right: 0;
-  margin-top: 6px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   max-height: 240px;
   overflow-y: auto;
   z-index: 1000;
-  animation: search-slide-up 200ms cubic-bezier(.25,1,.5,1) both;
+  animation: address-slide-up 200ms cubic-bezier(0.25, 1, 0.5, 1) both;
 }
 
-@keyframes search-slide-up {
+@keyframes address-slide-up {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -120,9 +142,8 @@
 }
 
 .address-result-item {
-  appearance: none;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   width: 100%;
   padding: 10px 12px;
@@ -134,6 +155,7 @@
   cursor: pointer;
   transition: background var(--t-fast) var(--ease);
   -webkit-tap-highlight-color: transparent;
+  font-size: 13px;
 }
 
 .address-result-item:last-child {
@@ -148,7 +170,6 @@
 .address-result-icon {
   flex-shrink: 0;
   color: var(--fg-3);
-  margin-top: 2px;
 }
 
 .address-result-text {
@@ -157,66 +178,35 @@
 }
 
 .address-result-name {
-  font-size: 13px;
-  font-weight: 500;
   color: var(--fg);
-  margin-bottom: 2px;
+  word-break: break-word;
+  font-size: 13px;
 }
 
-.address-result-context {
-  font-size: 12px;
-  color: var(--fg-3);
-}
+/* ─── Empty State ────────────────────────────────────────── */
 
-/* Empty state */
 .address-searcher-empty {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
   padding: 12px;
   text-align: center;
   color: var(--fg-3);
   font-size: 13px;
-  z-index: 1000;
-  animation: search-slide-up 200ms cubic-bezier(.25,1,.5,1) both;
+  animation: address-slide-up 200ms cubic-bezier(0.25, 1, 0.5, 1) both;
 }
 
-.address-searcher-empty p {
-  margin: 0;
-}
+/* ─── Mobile ─────────────────────────────────────────────── */
 
-/* ─── Desktop overrides ──────────────────────────────────────────── */
-
-@media (min-width: 769px) {
-  .address-searcher-container {
-    margin-top: 6px;
+@media (max-width: 640px) {
+  .address-searcher-input {
+    font-size: 16px; /* Prevent iOS zoom */
   }
 
   .address-searcher-box {
-    height: 38px;
-    font-size: 14px;
-  }
-
-  .address-searcher-input {
-    font-size: 14px;
+    height: 40px;
+    padding: 0 10px;
   }
 
   .address-current-location {
-    margin-top: 8px;
-    font-size: 14px;
-    padding: 12px 14px;
-  }
-
-  .address-searcher-results {
-    max-height: 300px;
-  }
-
-  .address-result-item {
-    padding: 12px 14px;
+    font-size: 12px;
+    padding: 8px 10px;
   }
 }
