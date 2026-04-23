@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { uploadImage, createPost } from "../../../api"; 
 

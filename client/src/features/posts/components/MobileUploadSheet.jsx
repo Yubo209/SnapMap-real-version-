@@ -161,7 +161,10 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
       });
       clearInterval(iv);
       setProgress(100);
-      setTimeout(() => { onSuccess?.(); handleClose(); }, 500);
+      // Wait for upload to complete, then reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch {
       clearInterval(iv);
       setStep(STEP_DETAILS);

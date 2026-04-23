@@ -6,6 +6,12 @@
   padding: 32px 28px 56px;
 }
 
+@media (max-width: 768px) {
+  .allspots-page {
+    padding: 20px 12px 56px;
+  }
+}
+
 /* ── Header ──────────────────────────────────────────────────────── */
 .allspots-header { margin-bottom: 28px; }
 
@@ -35,8 +41,14 @@
 .allspots-search-wrapper {
   position: relative;
   flex: 1;
-  min-width: 450px;
+  min-width: 200px;
   max-width: 100%;
+}
+
+@media (min-width: 769px) {
+  .allspots-search-wrapper {
+    min-width: 450px;
+  }
 }
 
 .allspots-search,
@@ -52,6 +64,13 @@
   outline: none;
   transition: border-color var(--t-base) var(--ease),
               box-shadow   var(--t-base) var(--ease);
+}
+
+@media (max-width: 768px) {
+  .allspots-search,
+  .allspots-select {
+    font-size: 16px; /* Prevent iOS zoom */
+  }
 }
 
 .allspots-search {

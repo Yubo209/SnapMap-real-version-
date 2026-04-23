@@ -65,11 +65,11 @@ const UploadPost = ({ onSuccess, prefilledAddress = '', onAddressUsed }) => {
     setMessage('');
     try {
       await submitPost(formData);
-      setMessage('Post uploaded successfully!');
-      setFormData({ name: '', description: '', address: '', image: null });
-      setPreview(null);
-      lastAppliedRef.current = '';
-      onSuccess?.();
+      setMessage('Post uploaded successfully! Reloading…');
+      // Wait for upload to complete, then reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch {
       setMessage('Failed to upload.');
     }
