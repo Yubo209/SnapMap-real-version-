@@ -132,45 +132,6 @@ const Dashboard = () => {
     setSearchParams(next);
   };
 
-  const renderSection = () => {
-    switch (section) {
-      case 'map':
-        return (
-          <div className="dashboard-map-section">
-            <MapView onCreateFromMap={handleCreateFromMap} />
-          </div>
-        );
-      case 'upload':
-        return (
-          <>
-            <h2 className="section-title">Upload a spot</h2>
-            <UploadPost
-              onSuccess={handleUploadSuccess}
-              prefilledAddress={prefilledAddress}
-              onAddressUsed={() => setPrefilledAddress('')}
-            />
-          </>
-        );
-      case 'posts':
-        return (
-          <AllSpots
-            posts={posts}
-            isLoading={postsLoading}
-            error={postsError}
-            onOpenPost={openPostModal}
-            initialCity={searchParams.get('city') || 'All'}
-            initialSearch={searchParams.get('q') || ''}
-          />
-        );
-      case 'settings':
-        return <SettingsPage />;
-      case 'myprofile':
-        return <MyProfile />;
-      default:
-        return <MapView onCreateFromMap={handleCreateFromMap} />;
-    }
-  };
-
   return (
     <div className="dashboard-container">
 
@@ -210,10 +171,45 @@ const Dashboard = () => {
         </nav>
 
         <main className={`dashboard-feed${section === 'map' ? ' dashboard-feed--map' : ''}`}>
-          {renderSection()}
+          {/* Keep all sections mounted — just hide/show with display */}
+          
+          <div style={{ display: section === 'map' ? 'flex' : 'none', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: 0 }}>
+            <div className="dashboard-map-section">
+              <MapView onCreateFromMap={handleCreateFromMap} />
+            </div>
+          </div>
+
+          <div style={{ display: section === 'upload' ? 'block' : 'none' }}>
+            <h2 className="section-title">Upload a spot</h2>
+            <UploadPost
+              onSuccess={handleUploadSuccess}
+              prefilledAddress={prefilledAddress}
+              onAddressUsed={() => setPrefilledAddress('')}
+            />
+          </div>
+
+          <div style={{ display: section === 'posts' ? 'block' : 'none' }}>
+            <AllSpots
+              posts={posts}
+              isLoading={postsLoading}
+              error={postsError}
+              onOpenPost={openPostModal}
+              initialCity={searchParams.get('city') || 'All'}
+              initialSearch={searchParams.get('q') || ''}
+            />
+          </div>
+
+          <div style={{ display: section === 'settings' ? 'block' : 'none' }}>
+            <SettingsPage />
+          </div>
+
+          <div style={{ display: section === 'myprofile' ? 'block' : 'none' }}>
+            <MyProfile />
+          </div>
         </main>
       </div>
 
+      {/* Mobile bottom nav — NOT AFFECTED by display changes above */}
       <nav className="mobile-bottom-nav">
         {/* Map */}
         <button className={section === 'map' ? 'active' : ''} onClick={() => updateSection('map')}>

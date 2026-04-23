@@ -1,7 +1,9 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { useCreatePost } from '../hooks/useCreatePost';
+import { useUserLocation } from '../hooks/useUserLocation';
+import AddressSearcher from './AddressSearcher';
 import './MobileUploadSheet.css';
 
 const STEP_PICK    = 'pick';
@@ -51,8 +53,10 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
   const imgRef      = useRef(null);
   const albumRef    = useRef(null);
   const cameraRef   = useRef(null);
+  const addressSearchRef = useRef(null);
 
   const { submitPost } = useCreatePost();
+  const { userLocation } = useUserLocation();
 
   /* ── Reset ────────────────────────────────────────────────────── */
   const reset = useCallback(() => {
@@ -69,6 +73,20 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
 
   const handleClose = () => { reset(); onClose(); };
 
+  /* ── Click outside to close address dropdown ────────────────────── */
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (addressSearchRef.current && !addressSearchRef.current.contains(e.target)) {
+        // Dispatch custom event to close dropdown
+        const event = new CustomEvent('closeAddressDropdown');
+        window.dispatchEvent(event);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   /* ── Pick file ────────────────────────────────────────────────── */
   const handleFile = (e) => {
     const file = e.target.files?.[0];
@@ -82,7 +100,18 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
 
   const onImageLoad = (e) => {
     const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
-    setCrop(centerAspectCrop(w, h, 1));
+    // Initialize crop to full image (not constrained to 1:1)
+    setCrop({
+      unit: '%',
+      width: 100,
+      height: 100,
+      x: 0,
+      y: 0,
+    });
+  };
+
+  const handleAddressSelect = (address) => {
+    setForm((p) => ({ ...p, address }));
   };
 
   /* ── Confirm crop → details ───────────────────────────────────── */
@@ -104,9 +133,12 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
 
   /* ── Submit ───────────────────────────────────────────────────── */
   const handleSubmit = async () => {
-    if (!form.name.trim())    { setErrorMsg('Please add a location name.'); return; }
-    if (!form.address.trim()) { setErrorMsg('Please add an address.'); return; }
-    if (!croppedBlob)         { setErrorMsg('No image.'); return; }
+    const trimmedName = form.name.trim();
+    const trimmedAddress = form.address.trim();
+    
+    if (!trimmedName) { setErrorMsg('Please add a location name.'); return; }
+    if (!trimmedAddress) { setErrorMsg('Please add an address.'); return; }
+    if (!croppedBlob) { setErrorMsg('No image.'); return; }
     setErrorMsg('');
 
     const imageFile = new File([croppedBlob], rawFileName, { type: 'image/jpeg' });
@@ -121,7 +153,12 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
     }, 120);
 
     try {
-      await submitPost({ ...form, image: imageFile });
+      await submitPost({ 
+        name: trimmedName, 
+        description: form.description.trim(), 
+        address: trimmedAddress, 
+        image: imageFile 
+      });
       clearInterval(iv);
       setProgress(100);
       setTimeout(() => { onSuccess?.(); handleClose(); }, 500);
@@ -186,11 +223,11 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
               <button className="mus-nav-next" onClick={handleConfirmCrop}>Next</button>
             </div>
             <div className="mus-crop-stage">
-              <ReactCrop crop={crop} onChange={setCrop} onComplete={setCompletedCrop} aspect={1}>
+              <ReactCrop crop={crop} onChange={setCrop} onComplete={setCompletedCrop}>
                 <img ref={imgRef} src={rawSrc} alt="crop" className="mus-crop-img" onLoad={onImageLoad} />
               </ReactCrop>
             </div>
-            <p className="mus-crop-hint">Drag corners to adjust</p>
+            <p className="mus-crop-hint">Drag corners to adjust any shape</p>
           </div>
         )}
 
@@ -214,16 +251,19 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
                       value={form.name}
                       onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                     />
-                    <input
-                      className="mus-input"
-                      type="text"
-                      placeholder="Address…"
-                      value={form.address}
-                      onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-                    />
                   </div>
                 </div>
               )}
+              
+              {/* Address Searcher with debounce + current location */}
+              <div ref={addressSearchRef}>
+                <AddressSearcher
+                  currentLocation={userLocation}
+                  prefillAddress={form.address}
+                  onSelect={handleAddressSelect}
+                />
+              </div>
+              
               <textarea
                 className="mus-input mus-textarea"
                 placeholder="Write a description…"

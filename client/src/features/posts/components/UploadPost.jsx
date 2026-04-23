@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useCreatePost } from '../hooks/useCreatePost';
+import { useUserLocation } from '../hooks/useUserLocation';
+import AddressSearcher from './AddressSearcher';
 
 const UploadPost = ({ onSuccess, prefilledAddress = '', onAddressUsed }) => {
   const [formData, setFormData] = useState({
@@ -11,9 +13,11 @@ const UploadPost = ({ onSuccess, prefilledAddress = '', onAddressUsed }) => {
   const [preview, setPreview] = useState(null);
   const [message, setMessage] = useState('');
   const { submitPost, loading, error } = useCreatePost();
+  const { userLocation } = useUserLocation();
 
   // Track whether we've already applied this particular prefilledAddress
   const lastAppliedRef = useRef('');
+  const addressSearchRef = useRef(null);
 
   useEffect(() => {
     // Try prop first, then sessionStorage fallback
@@ -26,6 +30,20 @@ const UploadPost = ({ onSuccess, prefilledAddress = '', onAddressUsed }) => {
     }
   }, [prefilledAddress, onAddressUsed]);
 
+  // Click outside to close address dropdown
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (addressSearchRef.current && !addressSearchRef.current.contains(e.target)) {
+        // Trigger close by dispatching custom event
+        const event = new CustomEvent('closeAddressDropdown');
+        window.dispatchEvent(event);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -35,6 +53,10 @@ const UploadPost = ({ onSuccess, prefilledAddress = '', onAddressUsed }) => {
     const file = e.target.files?.[0];
     setFormData((prev) => ({ ...prev, image: file || null }));
     setPreview(file ? URL.createObjectURL(file) : null);
+  };
+
+  const handleAddressSelect = (address) => {
+    setFormData((prev) => ({ ...prev, address }));
   };
 
   const handleSubmit = async (e) => {
@@ -67,21 +89,19 @@ const UploadPost = ({ onSuccess, prefilledAddress = '', onAddressUsed }) => {
           <textarea name="description" value={formData.description} onChange={handleChange} required />
         </label>
         <br />
-        <label>
-          Address (or place name):
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            required
-            placeholder="e.g. Yosemite National Park, Tunnel View, California"
-          />
-          <small style={{ color: '#666' }}>
-            Please include full location info (e.g. name + city + national park or region)
-          </small>
+        
+        {/* Address Searcher with debounce + current location */}
+        <label style={{ display: 'block', marginBottom: '1rem' }}>
+          Address:
+          <div ref={addressSearchRef}>
+            <AddressSearcher
+              currentLocation={userLocation}
+              prefillAddress={formData.address}
+              onSelect={handleAddressSelect}
+            />
+          </div>
         </label>
-        <br />
+
         <label>
           Upload Image:
           <input type="file" accept="image/*" onChange={handleImageChange} />

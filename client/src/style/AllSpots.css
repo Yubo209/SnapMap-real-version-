@@ -32,6 +32,13 @@
   align-items: center;
 }
 
+.allspots-search-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 450px;
+  max-width: 100%;
+}
+
 .allspots-search,
 .allspots-select {
   height: 40px;
@@ -46,13 +53,42 @@
   transition: border-color var(--t-base) var(--ease),
               box-shadow   var(--t-base) var(--ease);
 }
+
+.allspots-search {
+  width: 100%;
+  padding-right: 40px; /* Space for clear button */
+}
+
 .allspots-search::placeholder { color: var(--fg-3); }
 .allspots-search:hover,
 .allspots-select:hover  { border-color: var(--border-strong); }
 .allspots-search:focus,
 .allspots-select:focus  { border-color: var(--fg); box-shadow: 0 0 0 3px rgba(13,13,12,.05); }
 
-.allspots-search { flex: 1; min-width: 220px; }
+.allspots-clear-btn-inside {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--fg-3);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 6px 8px;
+  transition: color var(--t-base) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.allspots-clear-btn-inside:hover {
+  color: var(--fg);
+}
+
+.allspots-clear-btn-inside:active {
+  transform: translateY(-50%) scale(0.9);
+}
 
 .allspots-select {
   padding: 0 32px 0 12px;
@@ -197,4 +233,134 @@
   .spot-card-title { font-size: 12.5px; }
   .spot-card-body { padding: 9px 11px 11px; }
   .allspots-clear-btn { font-size: 12px; padding: 0 12px; }
+}
+
+/* ─── Search recommendations dropdown ───────────────────────────── */
+
+.allspots-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 100;
+  animation: search-slide-up 200ms cubic-bezier(.25,1,.5,1) both;
+}
+
+@keyframes search-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.allspots-dropdown-item {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.allspots-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.allspots-dropdown-item:hover,
+.allspots-dropdown-item.active {
+  background: var(--surface-2);
+}
+
+.allspots-dropdown-type {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.allspots-dropdown-text {
+  font-size: 13px;
+  color: var(--fg);
+}
+
+.allspots-dropdown-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--fg-3);
+  font-size: 13px;
+  animation: search-slide-up 200ms cubic-bezier(.25,1,.5,1) both;
+}
+
+/* ─── Pagination ────────────────────────────────────────────────── */
+
+.allspots-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.pagination-btn {
+  appearance: none;
+  height: 36px;
+  padding: 0 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--t-base) var(--ease);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+
+.pagination-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 13px;
+  color: var(--fg-2);
+  font-weight: 500;
+}
+
+.pagination-current {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.pagination-total {
+  color: var(--fg-3);
 }

@@ -187,9 +187,12 @@
 .settings-desc  { font-size: 12px; color: var(--fg-3); margin-top: 2px; }
 .settings-divider { border: none; border-top: 1px solid var(--border); margin: 0; }
 
-/* ── Mobile bottom nav ───────────────────────────────────────────── */
-.mobile-bottom-nav { display: none; }
+/* ─── Mobile bottom nav ───────────────────────────────────────────── */
+.mobile-bottom-nav {
+  display: none;
+}
 
+/* ─── Mobile ─────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   /* Hide header entirely on mobile — profile is in bottom nav */
   .dashboard-header { display: none; }
@@ -205,6 +208,7 @@
   }
   .section-title { font-size: 16px; }
 
+  /* ── Mobile bottom nav ───────────────────────────────────────────── */
   .mobile-bottom-nav {
     position: fixed;
     inset: auto 0 0;
@@ -216,22 +220,54 @@
     border-top: 1px solid var(--border);
     z-index: 200;
     padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
   }
+  
   .mobile-bottom-nav button {
-    appearance: none; border: none; background: transparent;
+    appearance: none;
+    border: none;
+    background: transparent;
     color: var(--fg-3);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 3px; padding: 6px 10px; cursor: pointer; flex: 1;
-    transition: color var(--t-base) var(--ease);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 10px;
+    cursor: pointer;
+    flex: 1;
+    transition: all var(--t-base) var(--ease);
     -webkit-tap-highlight-color: transparent;
+    position: relative;
+    border-radius: var(--r-md);
+    margin: 0 4px;
   }
-  .mobile-bottom-nav button.active { color: var(--fg); }
+  
+  .mobile-bottom-nav button:active:not(.mobile-nav-plus) {
+    transform: scale(0.92) translateY(1px);
+  }
+  
+  .mobile-bottom-nav button.active {
+    color: white;
+    background: #0066ff;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  .mobile-bottom-nav button.active:active:not(.mobile-nav-plus) {
+    transform: scale(0.94) translateY(0px);
+    box-shadow: 0 2px 8px rgba(0, 102, 255, 0.2);
+  }
+  
   .mobile-bottom-nav button span {
-    font-size: 9.5px; font-weight: 500;
-    letter-spacing: .05em; text-transform: uppercase;
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: .05em;
+    text-transform: uppercase;
   }
 
-  /* ── Center plus button — clean monochrome ── */
+  /* ── Center plus button — keep original, don't change ── */
   .mobile-nav-plus {
     flex: 1;
     display: flex !important;
@@ -240,7 +276,9 @@
     flex-direction: column !important;
     padding: 0 !important;
     gap: 3px !important;
+    margin: 0 !important;
   }
+  
   .mobile-nav-plus-inner {
     width: 44px;
     height: 28px;
@@ -251,6 +289,7 @@
     justify-content: center;
     transition: transform 120ms ease, opacity 120ms ease;
   }
+  
   .mobile-nav-plus:active .mobile-nav-plus-inner {
     transform: scale(0.88);
     opacity: 0.75;

@@ -11,6 +11,7 @@ import { useSearchParams } from "react-router-dom";
 import "../../../style/mapview.css";
 import { usePosts } from "../hooks/usePosts";
 import MapViewSearch from "./MapViewSearch";
+import ClusteredMarker from "./ClusteredMarker";
 import { useUserLocation } from "../hooks/useUserLocation";
 
 
@@ -20,12 +21,14 @@ const USER_ZOOM        = 12;
 const NEARBY_RADIUS_KM = 80;
 const FOCUS_ZOOM       = 15;
 const MAP_STYLES = {
-  light:  "mapbox://styles/mapbox/light-v11",
-  dark:   "mapbox://styles/mapbox/dark-v11",
-  street: "mapbox://styles/mapbox/streets-v12",
-  satell: "mapbox://styles/mapbox/satellite-v9",
+  light:    "mapbox://styles/mapbox/light-v11",
+  dark:     "mapbox://styles/mapbox/dark-v11",
+  street:   "mapbox://styles/mapbox/streets-v12",
+  outdoor:  "mapbox://styles/mapbox/outdoors-v12",
+  satell:   "mapbox://styles/mapbox/satellite-v9",
+  hybrid:   "mapbox://styles/mapbox/satellite-streets-v12",
 };
-const MAP_STYLE_DEFAULT = "light";
+const MAP_STYLE_DEFAULT = "street";
 
 function getDistanceKm(lat1, lng1, lat2, lng2) {
   const toRad = (v) => (v * Math.PI) / 180;
@@ -53,7 +56,11 @@ async function reverseGeocode(lng, lat, token) {
 }
 
 /* ── Mini card ──────────────────────────────────────────────────── */
-function MiniCard({ post, onOpen, onClose }) {
+function MiniCard({ post, onOpen, onClose, userLocation }) {
+  const distance = userLocation 
+    ? getDistanceKm(userLocation.lat, userLocation.lng, post.lat, post.lng)
+    : null;
+  
   return (
     <div className="mini-card-overlay" onClick={onClose}>
       <div className="mini-card" onClick={(e) => e.stopPropagation()}>
@@ -65,6 +72,7 @@ function MiniCard({ post, onOpen, onClose }) {
         <div className="mini-card-body">
           <p className="mini-card-title">{post.name || "Untitled Spot"}</p>
           {post.address && <p className="mini-card-city">{extractCityFromAddress(post.address)}</p>}
+          {distance !== null && <p className="mini-card-distance">{distance.toFixed(1)} km away</p>}
         </div>
         <button className="mini-card-open-btn" onClick={onOpen}>Open</button>
       </div>
@@ -143,6 +151,9 @@ export default function MapView({ onCreateFromMap }) {
   const [pinAddress,      setPinAddress]      = useState("");
   const [pinAddrLoading,  setPinAddrLoading]  = useState(false);
   const [showPinTooltip,  setShowPinTooltip]  = useState(false);
+  const [is3DMode,        setIs3DMode]        = useState(false);
+  const [markerStyle,     setMarkerStyle]     = useState("card"); // "pin" or "card"
+  const [showNearbyConnections, setShowNearbyConnections] = useState(false);
 
   /* ── Refs ──────────────────────────────────────────────────────── */
   const previousViewRef   = useRef(null);
@@ -151,7 +162,6 @@ export default function MapView({ onCreateFromMap }) {
   const pendingFocusRef   = useRef(null);
   
   // Track if we've done the first auto-fly to user location
-  // Separate from focusPost navigation — they shouldn't interfere
   const hasAutoFlyToUserRef = useRef(
     typeof window !== 'undefined' 
       ? window.__snapmap_has_auto_fly_to_user__ 
@@ -332,10 +342,51 @@ export default function MapView({ onCreateFromMap }) {
   };
 
   const handleNearbyJump = () => {
-    const params = new URLSearchParams();
-    params.set("section", "posts");
-    if (nearbyCity) { params.set("city", nearbyCity); params.set("q", nearbyCity); }
-    setSearchParams(params);
+    if (nearbyPosts.length === 0) return;
+    
+    // Toggle nearby view
+    if (showNearbyConnections) {
+      setShowNearbyConnections(false);
+    } else {
+      setShowNearbyConnections(true);
+      // Fit map to show all nearby posts + user location
+      if (userLocation && nearbyPosts.length > 0) {
+        const allLngs = [userLocation.lng, ...nearbyPosts.map(p => p.lng)];
+        const allLats = [userLocation.lat, ...nearbyPosts.map(p => p.lat)];
+        const minLng = Math.min(...allLngs);
+        const maxLng = Math.max(...allLngs);
+        const minLat = Math.min(...allLats);
+        const maxLat = Math.max(...allLats);
+        mapRef.current?.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 80, duration: 800 });
+      }
+    }
+  };
+
+  const handleResetToMyLocation = () => {
+    if (userLocation) flyTo(userLocation.lng, userLocation.lat, USER_ZOOM, 1000);
+  };
+
+  const handleToggle3D = () => {
+    if (!mapRef.current) return;
+    
+    const newMode = !is3DMode;
+    setIs3DMode(newMode);
+    
+    if (newMode) {
+      // Enable 3D: set pitch to 65 and rotate 45
+      mapRef.current.easeTo({
+        pitch: 65,
+        bearing: 45,
+        duration: 1200
+      });
+    } else {
+      // Disable 3D: reset to flat
+      mapRef.current.easeTo({
+        pitch: 0,
+        bearing: 0,
+        duration: 1200
+      });
+    }
   };
 
   const handleSearchSelectPost = (post) => {
@@ -346,10 +397,6 @@ export default function MapView({ onCreateFromMap }) {
     }
     mapRef.current?.flyTo({ center: [post.lng, post.lat], zoom: FOCUS_ZOOM, duration: 800, essential: true });
     setTimeout(() => { setActivePost(post); setPopupStep("mini"); }, 850);
-  };
-
-  const handleResetToMyLocation = () => {
-    if (userLocation) flyTo(userLocation.lng, userLocation.lat, USER_ZOOM, 1000);
   };
 
   if (isLoading) return <p className="map-status" style={{ padding: "16px" }}>Loading map…</p>;
@@ -369,6 +416,20 @@ export default function MapView({ onCreateFromMap }) {
           </button>
           <button
             type="button"
+            className={`map-chip map-chip--small${is3DMode ? " map-chip--active" : ""}`}
+            onClick={handleToggle3D}
+          >
+            {is3DMode ? "Exit 3D" : "3D View"}
+          </button>
+          <button
+            type="button"
+            className={`map-chip map-chip--small${markerStyle === "card" ? " map-chip--active" : ""}`}
+            onClick={() => setMarkerStyle(markerStyle === "card" ? "pin" : "card")}
+          >
+            {markerStyle === "card" ? "Cards" : "Pins"}
+          </button>
+          <button
+            type="button"
             className={`map-chip map-chip--small${createPin ? " map-chip--active" : ""}`}
             onClick={handleToggleCreatePin}
           >
@@ -380,11 +441,8 @@ export default function MapView({ onCreateFromMap }) {
       {locationLoading && <p className="map-status">Locating you…</p>}
       {!locationLoading && locationError && <p className="map-status map-status-muted">{locationError}</p>}
 
-      {/* Search bar */}
-      <MapViewSearch posts={valid} onSelectPost={handleSearchSelectPost} />
-
       <div className="mapview-stage">
-        {/* Map style picker */}
+        {/* Map style picker — hidden but available via keyboard */}
         <div className="map-style-picker" style={{ display: 'none' }}>
           {Object.entries(MAP_STYLES).map(([key, url]) => (
             <button
@@ -396,6 +454,9 @@ export default function MapView({ onCreateFromMap }) {
             </button>
           ))}
         </div>
+
+        {/* Search bar */}
+        <MapViewSearch posts={valid} onSelectPost={handleSearchSelectPost} />
         
         <Map
           ref={mapRef}
@@ -403,28 +464,180 @@ export default function MapView({ onCreateFromMap }) {
           onMove={(e) => setViewState(e.viewState)}
           onDragStart={handleDragStart}
           onLoad={handleMapLoad}
+          onStyleLoad={(map) => {
+            // Wait for style to fully load
+            setTimeout(() => {
+              if (map.getLayer('3d-buildings')) return;
+              
+              try {
+                const style = map.getStyle();
+                const layers = style.layers;
+                const sources = style.sources;
+                
+                // Find a good insertion point (before label layers)
+                const labelLayerId = layers.find(layer => 
+                  layer.type === 'symbol' && layer.layout?.['text-field']
+                )?.id;
+                
+                // Try multiple building layer names
+                const buildingLayers = ['building', 'building-v2', 'buildings'];
+                const sourceLayers = buildingLayers;
+                
+                let layerAdded = false;
+                
+                for (const sourceLayer of sourceLayers) {
+                  try {
+                    map.addLayer(
+                      {
+                        id: '3d-buildings',
+                        source: 'composite',
+                        'source-layer': sourceLayer,
+                        type: 'fill-extrusion',
+                        minzoom: 15,
+                        paint: {
+                          'fill-extrusion-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'height'],
+                            0, '#999',
+                            100, '#888',
+                            500, '#777'
+                          ],
+                          'fill-extrusion-height': ['get', 'height'],
+                          'fill-extrusion-base': ['get', 'min_height'],
+                          'fill-extrusion-opacity': 0.8
+                        }
+                      },
+                      labelLayerId
+                    );
+                    console.log(`✓ 3D buildings layer added (source-layer: ${sourceLayer})`);
+                    layerAdded = true;
+                    break;
+                  } catch (e) {
+                    // Try next source layer
+                  }
+                }
+                
+                if (!layerAdded) {
+                  console.log('⚠ Could not add 3D buildings - source layer not found');
+                }
+              } catch (err) {
+                console.error('3D buildings error:', err.message);
+              }
+            }, 800);
+          }}
           style={{ width: "100%", height: "100%" }}
           mapStyle={MAP_STYLES[mapStyle]}
           mapboxAccessToken={MAPBOX_TOKEN}
           attributionControl={false}
           logoPosition="bottom-right"
-          dragRotate={false}
-          pitchWithRotate={false}
+          dragRotate={true}
+          pitchWithRotate={true}
           fadeDuration={0}
           reuseMaps
         >
-          {/* Post markers */}
-          {valid.map((post) => {
-            const id = post._id || `${post.lat}-${post.lng}`;
-            const isActive = activePost && (activePost._id === post._id || (activePost.lat === post.lat && activePost.lng === post.lng));
-            return (
-              <Marker key={id} longitude={post.lng} latitude={post.lat} anchor="bottom" onClick={() => handleMarkerClick(post)}>
-                <div className={`map-marker-pin${isActive ? " map-marker-pin--active" : ""}`}>
-                  <img src="/icons8-map-pin-50.png" width={36} height={36} draggable={false} alt="" />
-                </div>
-              </Marker>
-            );
-          })}
+          {/* Connection lines for nearby posts */}
+          {showNearbyConnections && userLocation && nearbyPosts.length > 0 && (
+            <svg 
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                zIndex: 5
+              }}
+            >
+              {nearbyPosts.map((post, idx) => {
+                // Calculate pixel positions for user and post
+                const userCanvas = mapRef.current?.project([userLocation.lng, userLocation.lat]);
+                const postCanvas = mapRef.current?.project([post.lng, post.lat]);
+                
+                if (!userCanvas || !postCanvas) return null;
+                
+                return (
+                  <line
+                    key={`line-${idx}`}
+                    x1={userCanvas.x}
+                    y1={userCanvas.y}
+                    x2={postCanvas.x}
+                    y2={postCanvas.y}
+                    stroke="#0066ff"
+                    strokeWidth="2"
+                    opacity="0.5"
+                    strokeDasharray="5,5"
+                    className="nearby-connection-line"
+                  />
+                );
+              })}
+            </svg>
+          )}
+          
+          {/* Post markers - grouped by location */}
+          {(() => {
+            // Group posts by location (same address or coordinates)
+            const grouped = {};
+            valid.forEach((post) => {
+              const key = `${post.lat.toFixed(5)}-${post.lng.toFixed(5)}`;
+              if (!grouped[key]) grouped[key] = [];
+              grouped[key].push(post);
+            });
+
+            return Object.entries(grouped).map(([key, posts]) => {
+              const post = posts[0]; // First post for coordinates
+              const id = `marker-${key}`;
+              const isActive = activePost && posts.some(p => 
+                p._id === activePost._id || (p.lat === activePost.lat && p.lng === activePost.lng)
+              );
+              const isNearby = showNearbyConnections && nearbyPosts.some(p => 
+                p.lat === post.lat && p.lng === post.lng
+              );
+
+              return (
+                <Marker key={id} longitude={post.lng} latitude={post.lat} anchor="bottom">
+                  <div 
+                    onClick={() => handleMarkerClick(post)}
+                    style={{
+                      position: 'relative',
+                      display: 'inline-block'
+                    }}
+                  >
+                    {/* Highlight border for nearby */}
+                    {isNearby && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: -8,
+                          left: -8,
+                          right: -8,
+                          bottom: -8,
+                          border: '3px solid #0066ff',
+                          borderRadius: markerStyle === "card" ? '8px' : '50%',
+                          pointerEvents: 'none',
+                          animation: 'pulse-border 2s ease-in-out infinite'
+                        }}
+                      />
+                    )}
+                    
+                    {markerStyle === "card" ? (
+                      <ClusteredMarker 
+                        posts={posts}
+                        isActive={isActive}
+                        onClick={() => handleMarkerClick(post)}
+                        displayMode="card"
+                      />
+                    ) : (
+                      <div className={`map-marker-pin${isActive ? " map-marker-pin--active" : ""}`}>
+                        {posts.length > 1 && <span className="map-marker-count">{posts.length}</span>}
+                        <img src="/icons8-map-pin-50.png" width={36} height={36} draggable={false} alt="" />
+                      </div>
+                    )}
+                  </div>
+                </Marker>
+              );
+            });
+          })()}
 
           {/* User marker */}
           {userLocation && (
@@ -519,12 +732,49 @@ export default function MapView({ onCreateFromMap }) {
                 </svg>
               )}
             </button>
+
+            {/* Marker style toggle */}
+            <button
+              type="button"
+              className={`map-fab${markerStyle === "card" ? " map-fab--active" : ""}`}
+              onClick={() => setMarkerStyle(markerStyle === "card" ? "pin" : "card")}
+              aria-label={markerStyle === "card" ? "Switch to pins" : "Switch to cards"}
+              title={markerStyle === "card" ? "Switch to pins" : "Switch to cards"}
+            >
+              {markerStyle === "card" ? (
+                /* Card icon */
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+              ) : (
+                /* Pin icon */
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                </svg>
+              )}
+            </button>
+
+            {/* 3D Mode toggle */}
+            <button
+              type="button"
+              className={`map-fab${is3DMode ? " map-fab--active" : ""}`}
+              onClick={handleToggle3D}
+              aria-label={is3DMode ? "Exit 3D mode" : "Enter 3D mode"}
+              title={is3DMode ? "Exit 3D" : "3D View"}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+            </button>
           </div>
         )}
 
         {/* Mini card */}
         {activePost && popupStep === "mini" && (
-          <MiniCard post={activePost} onOpen={openFull} onClose={closePopup} />
+          <MiniCard post={activePost} onOpen={openFull} onClose={closePopup} userLocation={userLocation} />
         )}
 
         {/* Full card */}
