@@ -1,29 +1,47 @@
 // controllers/uploadController.js
 const streamifier = require('streamifier');
+const sharp = require('sharp');
 const cloudinary = require('../lib/cloudinary');
-
 
 exports.uploadImage = async (req, res) => {
   try {
-    console.log('📸 Upload request received');
+    console.log('🔥 uploadImage called');
     console.log('req.file:', req.file ? `${req.file.originalname} (${req.file.size} bytes)` : 'UNDEFINED');
-    console.log('req.body:', req.body);
-    console.log('Cloudinary config:', {
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? '✅' : '❌',
-      api_key: process.env.CLOUDINARY_API_KEY ? '✅' : '❌',
-      api_secret: process.env.CLOUDINARY_API_SECRET ? '✅' : '❌'
-    });
 
     if (!req.file) {
-      console.error('❌ No file received!');
+      console.log('❌ No file');
       return res.status(400).json({ error: 'No file provided' });
     }
 
-    const folder = (req.body && req.body.folder) ? String(req.body.folder) : 'snapmap/uploads';
+    console.log('📦 Original size:', (req.file.size / 1024 / 1024).toFixed(2), 'MB');
+
+    // 使用 sharp 压缩图片
+    let imageBuffer = req.file.buffer;
+    
+    try {
+      // 压缩图片：质量 80%，最大宽度 2000px
+      imageBuffer = await sharp(req.file.buffer)
+        .resize(2000, 2000, {
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+      
+      console.log('✅ Compressed size:', (imageBuffer.length / 1024 / 1024).toFixed(2), 'MB');
+    } catch (compressErr) {
+      console.warn('⚠️ Compression failed, using original:', compressErr.message);
+      // 如果压缩失败，用原始图片
+    }
+
+    console.log('📤 Starting Cloudinary upload...');
 
     const result = await new Promise((resolve, reject) => {
       const cld = cloudinary.uploader.upload_stream(
-        { folder, resource_type: 'image' },
+        {
+          folder: 'snapmap/uploads',
+          resource_type: 'image'
+        },
         (err, uploadResult) => {
           if (err) {
             console.error('❌ Cloudinary upload error:', err.message);
@@ -34,7 +52,8 @@ exports.uploadImage = async (req, res) => {
           }
         }
       );
-      streamifier.createReadStream(req.file.buffer).pipe(cld);
+      
+      streamifier.createReadStream(imageBuffer).pipe(cld);
     });
 
     console.log('✅ Upload complete:', {
