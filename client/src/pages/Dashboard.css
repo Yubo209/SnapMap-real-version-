@@ -17,6 +17,7 @@
   align-items: center;
   height: 54px;
   padding: 0 28px;
+  padding-top: env(safe-area-inset-top);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
