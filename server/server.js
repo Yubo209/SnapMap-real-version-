@@ -4,7 +4,16 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 
+
+
+
 dotenv.config();
+
+console.log('🚀 Server starting...');
+console.log('Node version:', process.version);
+console.log('Environment:', process.env.NODE_ENV);
+console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME ? '✅' : '❌');
+console.log('MONGO_URI:', process.env.MONGO_URI ? '✅' : '❌');
 
 const app = express();
 
