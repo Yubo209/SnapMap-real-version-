@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './MyProfile.css';
 import { getMe, uploadImage, updateAvatar, deletePost } from '../api';
+import PostModal from '../features/posts/components/PostModal';
 
 const MyProfile = () => {
   const [user, setUser] = useState(null);        
@@ -10,6 +11,8 @@ const MyProfile = () => {
   const [savingAvatar, setSavingAvatar] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [activeTab, setActiveTab] = useState('posts'); // 'posts' or 'likes'
+  const [selectedPost, setSelectedPost] = useState(null); // 用于 PostModal
+  const [searchParams, setSearchParams] = useSearchParams();
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -17,6 +20,7 @@ const MyProfile = () => {
     (async () => {
       try {
         const me = await getMe();
+        // populate likedPosts
         setUser(me);
         
         if (me?.avatarUrl) {
@@ -75,6 +79,26 @@ const MyProfile = () => {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  // 打开 PostModal
+  const handleViewPost = (post) => {
+    setSelectedPost(post);
+  };
+
+  // 关闭 PostModal
+  const handleCloseModal = () => {
+    setSelectedPost(null);
+  };
+
+  // On Map 逻辑：关闭 modal，跳转到 dashboard 的 map 页面，并显示这个 post
+  const handleViewOnMap = (postId) => {
+    handleCloseModal();
+    // 跳转到 dashboard，map 部分，并 focus 这个 post
+    const next = new URLSearchParams();
+    next.set('section', 'map');
+    next.set('focusPost', postId);
+    navigate(`/dashboard?${next.toString()}`);
   };
 
   const handleLogout = () => {
@@ -186,7 +210,17 @@ const MyProfile = () => {
                     <h4>{post.name}</h4>
                     <p>{post.description}</p>
                     <small className="myprofile-post-address">{post.address}</small>
-                    <small className="myprofile-post-by">by {post.userId?.username || 'Unknown'}</small>
+                    <small className="myprofile-post-by">
+                      by {post.user?.username || 'Unknown'}
+                    </small>
+                    <div className="myprofile-post-actions">
+                      <button
+                        className="myprofile-view-btn"
+                        onClick={() => handleViewPost(post)}
+                      >
+                        View Post
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -195,6 +229,15 @@ const MyProfile = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* PostModal */}
+      {selectedPost && (
+        <PostModal
+          post={selectedPost}
+          onClose={handleCloseModal}
+          onViewOnMap={() => handleViewOnMap(selectedPost._id)}
+        />
       )}
     </div>
   );

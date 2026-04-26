@@ -8,12 +8,23 @@ const cloudinary = require('../lib/cloudinary');
  
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user.id)
+      .select('-password')
+      .populate('likedPosts')  // ← 加这行，populate 用户点赞的所有 posts
+      .exec();
+
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const posts = await Post.find({ user: req.user.id }).sort({ createdAt: -1 });
+    // 查询用户上传的所有 posts
+    const posts = await Post.find({ user: req.user.id })
+      .sort({ createdAt: -1 });
 
-    return res.status(200).json({ ...user.toObject(), posts });
+    // 返回用户信息 + 用户点赞的 posts + 用户上传的 posts
+    return res.status(200).json({ 
+      ...user.toObject(), 
+      posts,
+      likedPosts: user.likedPosts || []
+    });
   } catch (err) {
     console.error('getMe error:', err);
     return res.status(500).json({ message: "Server error", error: err.message });
