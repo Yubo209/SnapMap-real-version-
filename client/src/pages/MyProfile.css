@@ -236,6 +236,28 @@
   cursor: not-allowed;
 }
 
+.myprofile-view-btn {
+  appearance: none;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--primary-blue);
+  background: transparent;
+  color: var(--primary-blue);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+  letter-spacing: -0.01em;
+}
+
+.myprofile-view-btn:hover:not(:disabled) {
+  background: rgba(0, 102, 255, 0.1);
+}
+
+.myprofile-view-btn:active {
+  transform: scale(0.97);
+}
+
 .myprofile-empty {
   text-align: center;
   padding: 32px 20px;
@@ -311,5 +333,16 @@
     text-align: center;
     padding: 10px 12px;
     font-size: 12.5px;
+  }
+
+  .myprofile-post-actions {
+    gap: 6px;
+  }
+
+  .myprofile-delete-btn,
+  .myprofile-view-btn {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 11px;
   }
 }

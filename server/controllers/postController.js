@@ -1,4 +1,5 @@
 const Post = require('../models/Post');
+const User = require('../models/User');
 const cloudinary = require('../lib/cloudinary');
 
 exports.createPost = async (req, res) => {
@@ -110,11 +111,13 @@ exports.toggleLike = async (req, res) => {
     }
 
     const userId = req.user.id;
+    const postId = post._id.toString();
 
     const alreadyLiked = post.likes.some(
       (id) => id.toString() === userId
     );
 
+    // 更新 Post.likes
     if (alreadyLiked) {
       post.likes = post.likes.filter(
         (id) => id.toString() !== userId
@@ -124,6 +127,25 @@ exports.toggleLike = async (req, res) => {
     }
 
     await post.save();
+
+    // 同时更新 User.likedPosts
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (alreadyLiked) {
+      // 取消点赞：从 likedPosts 删除
+      user.likedPosts = user.likedPosts.filter(
+        (id) => id.toString() !== postId
+      );
+    } else {
+      // 点赞：添加到 likedPosts
+      if (!user.likedPosts) user.likedPosts = [];
+      user.likedPosts.push(postId);
+    }
+
+    await user.save();
 
     const updatedPost = await Post.findById(post._id)
       .populate('user', 'username avatarUrl')

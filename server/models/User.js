@@ -6,11 +6,18 @@ const userSchema = new mongoose.Schema({
   email:    { type: String, required: true, unique: true, lowercase: true },
   password: { type: String, required: true },
 
-
   avatarUrl: { type: String, default: '/default-avatar-icon-of-social-media-user-vector.jpg' },
-  avatarPublicId: { type: String, default: '' }   
-}, { timestamps: true });
+  avatarPublicId: { type: String, default: '' },
 
+  // 用户点赞的所有 post IDs
+  likedPosts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Post',
+      default: []
+    }
+  ]
+}, { timestamps: true });
 
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ username: 1 }, { unique: true });
