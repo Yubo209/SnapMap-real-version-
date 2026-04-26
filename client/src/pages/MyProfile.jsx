@@ -87,8 +87,15 @@ const MyProfile = () => {
   };
 
   // 关闭 PostModal
-  const handleCloseModal = () => {
+  const handleCloseModal = async () => {
     setSelectedPost(null);
+    // ✅ 重新fetch用户数据，确保likedPosts最新
+    try {
+      const me = await getMe();
+      setUser(me);
+    } catch (err) {
+      console.error('Failed to refresh user data:', err);
+    }
   };
 
   // On Map 逻辑：关闭 modal，跳转到 dashboard 的 map 页面，并显示这个 post

@@ -205,6 +205,22 @@ exports.toggleLike = async (req, res) => {
 
     await post.save();
 
+    // ✅ 同时更新user的likedPosts
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (user) {
+      if (alreadyLiked) {
+        // 取消赞时，从likedPosts移除
+        user.likedPosts = user.likedPosts.filter(id => id.toString() !== post._id.toString());
+      } else {
+        // 点赞时，加到likedPosts
+        if (!user.likedPosts.includes(post._id)) {
+          user.likedPosts.push(post._id);
+        }
+      }
+      await user.save();
+    }
+
     const updatedPost = await Post.findById(post._id)
       .populate('user', 'username avatarUrl')
       .populate('comments.user', 'username avatarUrl');
