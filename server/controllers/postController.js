@@ -1,5 +1,9 @@
+// server/controllers/postController.js
+
 const Post = require('../models/Post');
+const Location = require('../models/Location');
 const cloudinary = require('../lib/cloudinary');
+const { normalizeAddressString, getDistanceBetweenCoords } = require('../utils/addressNormalizer');
 
 exports.createPost = async (req, res) => {
   try {
@@ -19,6 +23,7 @@ exports.createPost = async (req, res) => {
       });
     }
 
+    // 1️⃣ 创建 post（永远创建新的）
     const post = await Post.create({
       name,
       description,
@@ -30,6 +35,60 @@ exports.createPost = async (req, res) => {
       user: req.user.id,
     });
 
+    // 2️⃣ 处理 Location（地址去重）
+    if (address) {
+      const normalizedAddress = normalizeAddressString(address);
+      let location = null;
+
+      // 策略1️⃣：先用标准化地址精确匹配（优先）
+      location = await Location.findOne({ normalizedAddress });
+
+      // 策略2️⃣：如果地址没匹配，才用坐标（距离 50m 以内）
+      if (!location && lat && lng) {
+        const nearbyLocations = await Location.find({
+          lat: { $exists: true },
+          lng: { $exists: true }
+        });
+
+        for (const loc of nearbyLocations) {
+          const distance = getDistanceBetweenCoords(lat, lng, loc.lat, loc.lng);
+          
+          // 50 米以内视为同一位置
+          if (distance < 0.05) {
+            location = loc;
+            console.log(`✅ 坐标匹配：${location.address}，距离 ${(distance * 1000).toFixed(0)}m`);
+            break;
+          }
+        }
+      }
+
+      // 创建或更新 Location
+      if (!location) {
+        // 创建新的 Location（这个post是第一个，作为代表）
+        location = await Location.create({
+          address,
+          normalizedAddress,
+          lat,
+          lng,
+          posts: [post._id],
+          photoCount: 1
+        });
+        console.log(`✅ 创建新位置：${address}（第1张照片）`);
+      } else {
+        // 🆕 新逻辑：分配到现有Location时
+        // - 使用 Location.posts[0] 作为这个位置的代表
+        // - 新post直接加入posts数组
+        if (!location.posts.includes(post._id)) {
+          location.posts.push(post._id);
+        }
+        location.photoCount = location.posts.length;
+        location.updatedAt = new Date();
+        await location.save();
+        console.log(`✅ 加入现有位置：${location.address}（共${location.posts.length}张照片，代表图：posts[0]）`);
+      }
+    }
+
+    // 3️⃣ 返回 post
     const populatedPost = await Post.findById(post._id)
       .populate('user', 'username avatarUrl')
       .populate('comments.user', 'username avatarUrl');
@@ -84,11 +143,32 @@ exports.deletePost = async (req, res) => {
       return res.status(403).json({ message: 'Forbidden' });
     }
 
+    // 删除 cloudinary 图片
     if (post.imagePublicId) {
       try {
         await cloudinary.uploader.destroy(post.imagePublicId);
       } catch (e) {
         console.warn('Cloudinary destroy failed (ignored):', e.message);
+      }
+    }
+
+    // 删除post前，从Location中移除这个postId
+    if (post.address) {
+      const normalizedAddress = normalizeAddressString(post.address);
+      const location = await Location.findOne({ normalizedAddress });
+      
+      if (location) {
+        location.posts = location.posts.filter(id => id.toString() !== post._id.toString());
+        location.photoCount = location.posts.length;
+        
+        if (location.posts.length === 0) {
+          // 如果这个位置没有posts了，直接删除Location
+          await Location.findByIdAndDelete(location._id);
+          console.log(`✅ 删除空位置：${location.address}`);
+        } else {
+          await location.save();
+          console.log(`✅ 更新位置：${location.address}（剩余${location.posts.length}张照片，新代表：posts[0]）`);
+        }
       }
     }
 

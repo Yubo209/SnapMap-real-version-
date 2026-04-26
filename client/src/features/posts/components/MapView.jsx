@@ -13,6 +13,8 @@ import { usePosts } from "../hooks/usePosts";
 import MapViewSearch from "./MapViewSearch";
 import ClusteredMarker from "./ClusteredMarker";
 import { useUserLocation } from "../hooks/useUserLocation";
+import { getLocationByCoords } from "../../../api";  // ✅ 新增
+import LocationBigCard from "./LocationBigCard";     // ✅ 新增
 
 
 const MAPBOX_TOKEN     = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -146,6 +148,8 @@ export default function MapView({ onCreateFromMap }) {
   const [viewState,       setViewState]       = useState(INITIAL_VIEW);
   const [popupStep,       setPopupStep]       = useState(null);
   const [activePost,      setActivePost]      = useState(null);
+  const [locationData,    setLocationData]    = useState(null);  // ✅ 新增
+  const [hoveredMarkerForPin, setHoveredMarkerForPin] = useState(null);  // ✅ 新增：hover的marker用于create pin
   const [showYouAreHere,  setShowYouAreHere]  = useState(false);
   const [createPin,       setCreatePin]       = useState(null);
   const [pinAddress,      setPinAddress]      = useState("");
@@ -217,7 +221,22 @@ export default function MapView({ onCreateFromMap }) {
     setPopupStep("mini");
   }, []);
 
-  const openFull = useCallback(() => setPopupStep("full"), []);
+  // ✅ 修改：openFull 变为 async，获取Location数据
+  const openFull = useCallback(async () => {
+    try {
+      // 获取该位置的完整Location数据（包含所有posts）
+      if (activePost?.lat && activePost?.lng) {
+        const location = await getLocationByCoords(activePost.lat, activePost.lng);
+        setLocationData(location);
+        setPopupStep("full");
+      }
+    } catch (err) {
+      console.error('Failed to load location:', err);
+      // 失败时也显示（降级）
+      setLocationData(null);
+      setPopupStep("full");
+    }
+  }, [activePost]);
 
   /* ── Navigate to PostModal ────────────────────────────────────── */
   const handleViewPost = useCallback((postId) => {
@@ -305,6 +324,13 @@ export default function MapView({ onCreateFromMap }) {
   /* ── Reverse geocode create pin ───────────────────────────────── */
   useEffect(() => {
     if (!createPin) return;
+    
+    // ✅ 如果已经选中了marker，就不要reverse geocode，保持marker的地址
+    if (hoveredMarkerForPin?.address) {
+      console.log('ℹ️ 已选中marker，跳过reverse geocode');
+      return;
+    }
+    
     let cancelled = false;
     setPinAddrLoading(true);
     setPinAddress("");
@@ -312,12 +338,23 @@ export default function MapView({ onCreateFromMap }) {
       if (!cancelled) { setPinAddress(addr); setPinAddrLoading(false); }
     });
     return () => { cancelled = true; };
-  }, [createPin]);
+  }, [createPin, hoveredMarkerForPin]);
+
+  /* ── 当选中marker时，用marker的地址 ───────────────────────────── */
+  useEffect(() => {
+    if (hoveredMarkerForPin?.address) {
+      console.log('🔄 useEffect触发，设置pinAddress为:', hoveredMarkerForPin.address);
+      // ✅ 如果选中了marker且有address，直接用
+      setPinAddress(hoveredMarkerForPin.address);
+      setPinAddrLoading(false);
+    }
+  }, [hoveredMarkerForPin, MAPBOX_TOKEN]);
 
   /* ── Toggle create pin ────────────────────────────────────────── */
   const handleToggleCreatePin = () => {
     if (createPin) {
       setCreatePin(null);
+      setHoveredMarkerForPin(null);  // ✅ 新增
       setShowPinTooltip(false);
     } else {
       const center = mapRef.current?.getCenter();
@@ -332,8 +369,10 @@ export default function MapView({ onCreateFromMap }) {
   };
 
   const handleConfirmCreate = () => {
+    // ✅ pinAddress已经根据hoveredMarkerForPin自动更新了，直接用就行
     onCreateFromMap?.(pinAddress);
     setCreatePin(null);
+    setHoveredMarkerForPin(null);
     setShowPinTooltip(false);
   };
 
@@ -411,7 +450,7 @@ export default function MapView({ onCreateFromMap }) {
           <button type="button" className="map-chip map-chip--small" onClick={handleResetToMyLocation}>
             My location
           </button>
-          <button type="button" className="map-chip map-chip--large" onClick={handleNearbyJump}>
+          <button type="button" className={`map-chip map-chip--large${showNearbyConnections ? " map-chip--active" : ""}`} onClick={handleNearbyJump}>
             {nearbyCity ? `${nearbyPosts.length} spots near ${nearbyCity}` : `${nearbyPosts.length} photography spots nearby`}
           </button>
           <button
@@ -619,6 +658,23 @@ export default function MapView({ onCreateFromMap }) {
                         }}
                       />
                     )}
+
+                    {/* ✅ 新增：hover时的黄色边框（用于create pin） */}
+                    {hoveredMarkerForPin?._id === post._id && createPin && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: -8,
+                          left: -8,
+                          right: -8,
+                          bottom: -8,
+                          border: '4px solid #ffff00',
+                          borderRadius: markerStyle === "card" ? '8px' : '50%',
+                          pointerEvents: 'none',
+                          boxShadow: '0 0 8px rgba(255, 255, 0, 0.6)'
+                        }}
+                      />
+                    )}
                     
                     {markerStyle === "card" ? (
                       <ClusteredMarker 
@@ -668,8 +724,51 @@ export default function MapView({ onCreateFromMap }) {
               latitude={createPin.lat}
               anchor="bottom"
               draggable
-              onDrag={(e) => setCreatePin({ lng: e.lngLat.lng, lat: e.lngLat.lat })}
-              onDragEnd={(e) => setCreatePin({ lng: e.lngLat.lng, lat: e.lngLat.lat })}
+              onDrag={(e) => {
+                const newLng = e.lngLat.lng;
+                const newLat = e.lngLat.lat;
+                setCreatePin({ lng: newLng, lat: newLat });
+                
+                // ✅ 改为视觉上的检测：pin在屏幕上的位置是否与某个marker重叠
+                if (!mapRef.current) return;
+                
+                const pinScreenCoords = mapRef.current.project([newLng, newLat]);
+                let closestPost = null;
+                let closestDistance = Infinity;
+                
+                for (const post of valid) {
+                  const markerScreenCoords = mapRef.current.project([post.lng, post.lat]);
+                  
+                  // 计算屏幕距离（像素）
+                  const dx = pinScreenCoords.x - markerScreenCoords.x;
+                  const dy = pinScreenCoords.y - markerScreenCoords.y;
+                  const distance = Math.sqrt(dx * dx + dy * dy);
+                  
+                  // 如果在80像素范围内，就认为选中了
+                  if (distance < 80) {
+                    if (distance < closestDistance) {
+                      closestDistance = distance;
+                      closestPost = post;
+                    }
+                  }
+                }
+                
+                // ✅ 只有当closestPost改变时才更新hoveredMarkerForPin
+                // 这样可以保持地址锁定
+                if (hoveredMarkerForPin?._id !== closestPost?._id) {
+                  setHoveredMarkerForPin(closestPost);
+                  if (closestPost) {
+                    console.log('✅ setHoveredMarkerForPin:', {
+                      name: closestPost.name,
+                      address: closestPost.address
+                    });
+                  }
+                }
+              }}
+              onDragEnd={(e) => {
+                setCreatePin({ lng: e.lngLat.lng, lat: e.lngLat.lat });
+                // hoveredMarkerForPin保持，不清空
+              }}
             >
               <div className="map-marker-create">
                 <svg width="36" height="44" viewBox="0 0 36 44" fill="none">
@@ -703,7 +802,7 @@ export default function MapView({ onCreateFromMap }) {
             {nearbyPosts.length > 0 && (
               <button
                 type="button"
-                className="map-fab map-fab--badge"
+                className={`map-fab map-fab--badge${showNearbyConnections ? " map-fab--active" : ""}`}
                 onClick={handleNearbyJump}
                 aria-label={`${nearbyPosts.length} spots nearby`}
               >
@@ -778,8 +877,13 @@ export default function MapView({ onCreateFromMap }) {
         )}
 
         {/* Full card */}
+        {/* Full card or LocationBigCard */}
         {activePost && popupStep === "full" && (
-          <FullCard post={activePost} onClose={closePopup} onViewPost={handleViewPost} />
+          locationData ? (
+            <LocationBigCard location={locationData} onClose={closePopup} />
+          ) : (
+            <FullCard post={activePost} onClose={closePopup} onViewPost={handleViewPost} />
+          )
         )}
 
         {/* Create pin tooltip */}

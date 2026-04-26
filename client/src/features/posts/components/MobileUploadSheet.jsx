@@ -242,9 +242,9 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
               <span className="mus-nav-title">Add details</span>
               <button className="mus-nav-next" onClick={handleSubmit}>Share</button>
             </div>
-            <div className="mus-details-scroll">
+            <div className="mus-details-scroll" onClick={(e) => e.stopPropagation()}>  {/* ✅ 新增 */}
               {croppedPreview && (
-                <div className="mus-details-top">
+                <div className="mus-details-top" onClick={(e) => e.stopPropagation()}>  {/* ✅ 新增 */}
                   <img src={croppedPreview} alt="preview" className="mus-thumb" />
                   <div className="mus-fields">
                     <input
@@ -253,13 +253,14 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
                       placeholder="Location name…"
                       value={form.name}
                       onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                      onClick={(e) => e.stopPropagation()}  // ✅ 新增
                     />
                   </div>
                 </div>
               )}
               
               {/* Address Searcher with debounce + current location */}
-              <div ref={addressSearchRef}>
+              <div ref={addressSearchRef} onClick={(e) => e.stopPropagation()}>  {/* ✅ 新增 */}
                 <AddressSearcher
                   currentLocation={userLocation}
                   prefillAddress={form.address}
@@ -273,6 +274,7 @@ export default function MobileUploadSheet({ isOpen, onClose, onSuccess, prefille
                 rows={4}
                 value={form.description}
                 onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                onClick={(e) => e.stopPropagation()}  // ✅ 新增
               />
               {errorMsg && <p className="mus-error">{errorMsg}</p>}
             </div>

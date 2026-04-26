@@ -39,12 +39,14 @@ const userRoutes = require('./routes/user');
 const photoRoutes = require('./routes/photo');
 const postRoutes = require('./routes/posts');
 const uploadRoutes = require('./routes/upload');
+const locationRoutes = require('./routes/location');  // ✅ 新增
 
 app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/photos', photoRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/locations', locationRoutes);  // ✅ 新增
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {

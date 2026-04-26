@@ -117,3 +117,12 @@ export function updateAvatar(payload) {
 export function getPhotos() {
   return apiFetch('/api/photos');
 }
+
+// 🆕 新增两个函数 - 获取位置信息
+export function getLocationByAddress(address) {
+  return apiFetch(`/api/locations/by-address?address=${encodeURIComponent(address)}`);
+}
+
+export function getLocationByCoords(lat, lng, radius = 0.05) {
+  return apiFetch(`/api/locations/by-coords?lat=${lat}&lng=${lng}&radius=${radius}`);
+}

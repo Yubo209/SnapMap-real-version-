@@ -1,0 +1,343 @@
+/* ─── LocationBigCard — Full Location Photo Gallery ──────────────── */
+
+.location-big-card-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 800;
+  animation: lbc-bg-fade-in 200ms ease both;
+}
+
+@keyframes lbc-bg-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.location-big-card {
+  width: 100%;
+  max-width: 100%;
+  height: 80vh;
+  max-height: 90dvh;
+  background: var(--surface, white);
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: lbc-slide-up 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes lbc-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+
+.lbc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border, #e5e5e5);
+  flex-shrink: 0;
+  background: var(--surface, white);
+}
+
+.lbc-header-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.lbc-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--fg, #0d0d0c);
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.lbc-count {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--fg-3, #999);
+  letter-spacing: -0.01em;
+}
+
+.lbc-close-btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: var(--fg-2, #666);
+  cursor: pointer;
+  transition: color 120ms ease;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.lbc-close-btn:hover {
+  color: var(--fg, #0d0d0c);
+}
+
+.lbc-close-btn:active {
+  transform: scale(0.9);
+}
+
+/* ── Photos Grid - 一行3个card ──────────────────────────────────── */
+
+.lbc-photos-grid {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg, #fafafa);
+}
+
+/* 卡片容器 */
+.lbc-photo-item {
+  background: var(--surface, white);
+  border: 1px solid var(--border, #e5e5e5);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.lbc-photo-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: var(--border-strong, #ccc);
+}
+
+.lbc-photo-item:active {
+  transform: translateY(-2px);
+}
+
+/* 卡片图片部分 */
+.lbc-photo-overlay {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--surface-2, #f5f5f5);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lbc-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 120ms ease;
+}
+
+.lbc-photo-item:hover .lbc-photo {
+  transform: scale(1.05);
+}
+
+.lbc-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-3, #efefef);
+  color: var(--fg-3, #999);
+  font-size: 12px;
+}
+
+/* 卡片内容 */
+.lbc-photo-info {
+  padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lbc-photo-name {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg, #0d0d0c);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lbc-photo-author {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: var(--fg-3, #999);
+  letter-spacing: -0.005em;
+}
+
+.lbc-photo-desc {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--fg-2, #666);
+  line-height: 1.4;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lbc-photo-likes {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border, #e5e5e5);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-2, #666);
+}
+
+/* ── Dark mode ───────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  .location-big-card {
+    background: var(--surface, #1a1a1a);
+  }
+
+  .lbc-header {
+    background: var(--surface, #1a1a1a);
+  }
+
+  .lbc-title {
+    color: var(--fg, #f5f5f5);
+  }
+
+  .lbc-photos-grid {
+    background: var(--bg, #0d0d0c);
+  }
+
+  .lbc-photo-item {
+    background: var(--surface, #1a1a1a);
+    border-color: var(--border, #333);
+  }
+
+  .lbc-photo-overlay {
+    background: var(--surface-2, #262626);
+  }
+
+  .lbc-photo-placeholder {
+    background: var(--surface-3, #333);
+    color: var(--fg-3, #666);
+  }
+
+  .lbc-photo-name {
+    color: var(--fg, #f5f5f5);
+  }
+
+  .lbc-photo-author,
+  .lbc-photo-desc {
+    color: var(--fg-2, #999);
+  }
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .location-big-card-overlay {
+    align-items: flex-end; 
+  }
+
+  .location-big-card {
+    height: 90dvh;
+    border-radius: 16px 16px 0 0;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .lbc-header {
+    padding: 16px;
+  }
+
+  .lbc-title {
+    font-size: 16px;
+  }
+
+  .lbc-count {
+    font-size: 13px;
+  }
+
+  .lbc-close-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+
+  .lbc-photos-grid {
+    grid-template-columns: 1fr;  
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .lbc-photo-item {
+    border-radius: 10px;
+  }
+
+  .lbc-photo-overlay {
+    aspect-ratio: 16 / 9;  
+    border-radius: 10px 10px 0 0;
+  }
+
+  .lbc-photo-info {
+    padding: 14px;
+  }
+
+  .lbc-photo-name {
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  .lbc-photo-author {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .lbc-photo-desc {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .lbc-photos-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .lbc-header {
+    padding: 10px 12px;
+  }
+
+  .lbc-title {
+    font-size: 14px;
+  }
+
+  .lbc-photo-overlay {
+    aspect-ratio: 16 / 9;
+  }
+}
