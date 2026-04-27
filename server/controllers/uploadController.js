@@ -17,18 +17,31 @@ exports.uploadImage = async (req, res) => {
 
     // 使用 sharp 压缩图片
     let imageBuffer = req.file.buffer;
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    let quality = 95;
     
     try {
-      // 压缩图片：质量 80%，最大宽度 2000px
-      imageBuffer = await sharp(req.file.buffer)
-        .resize(2000, 2000, {
-          fit: 'inside',
-          withoutEnlargement: true
-        })
-        .jpeg({ quality: 80 })
-        .toBuffer();
+      // ✅ 循环降低质量，直到文件<10MB
+      while (quality >= 70) {
+        imageBuffer = await sharp(req.file.buffer)
+          .resize(2000, 2000, {
+            fit: 'inside',
+            withoutEnlargement: true
+          })
+          .jpeg({ quality })
+          .toBuffer();
+        
+        if (imageBuffer.length <= MAX_SIZE) {
+          console.log(`✅ Compressed with quality ${quality}: ${(imageBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+          break;
+        }
+        
+        quality -= 5; // 每次降低5个质量
+      }
       
-      console.log('✅ Compressed size:', (imageBuffer.length / 1024 / 1024).toFixed(2), 'MB');
+      if (imageBuffer.length > MAX_SIZE) {
+        console.warn(`⚠️ File still >10MB at quality 70, using anyway: ${(imageBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+      }
     } catch (compressErr) {
       console.warn('⚠️ Compression failed, using original:', compressErr.message);
       // 如果压缩失败，用原始图片
