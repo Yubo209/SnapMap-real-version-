@@ -119,14 +119,78 @@
   height: 100%;
 }
 
-.lbc-photo-item:hover {
+.lbc-photo-item:hover:not(.lbc-photo-skeleton) {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   border-color: var(--border-strong, #ccc);
 }
 
-.lbc-photo-item:active {
+.lbc-photo-item:active:not(.lbc-photo-skeleton) {
   transform: translateY(-2px);
+}
+
+/* ── Skeleton loading ────────────────────────────────────────────── */
+
+.lbc-photo-skeleton {
+  pointer-events: none;
+  cursor: default;
+}
+
+.lbc-photo-skeleton:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border, #e5e5e5);
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 0;
+  padding-bottom: 75%;
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.skeleton-title,
+.skeleton-author,
+.skeleton-desc {
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-title {
+  height: 16px;
+  margin: 0 0 8px;
+  width: 85%;
+}
+
+.skeleton-author {
+  height: 12px;
+  margin: 0 0 8px;
+  width: 65%;
+}
+
+.skeleton-desc {
+  height: 12px;
+  margin: 0 0 4px;
+  width: 100%;
+}
+
+.skeleton-desc:last-of-type {
+  margin-bottom: 0;
+  width: 90%;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* 卡片图片部分 */

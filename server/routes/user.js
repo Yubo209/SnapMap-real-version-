@@ -7,7 +7,9 @@ const {
   getMe,
   getUserPhotos,
   getUserProfile,
-  updateAvatar
+  updateAvatar,
+  searchUsers
+
 } = require('../controllers/userController');
 
 
@@ -21,5 +23,8 @@ router.get('/:id/profile', getUserProfile);
 
 
 router.put('/avatar', authMiddleware, updateAvatar);
+
+
+router.get('/search', searchUsers);
 
 module.exports = router;

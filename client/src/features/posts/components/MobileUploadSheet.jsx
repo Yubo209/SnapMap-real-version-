@@ -15,20 +15,39 @@ const STEP_DONE    = 'done';
 function getCroppedBlob(image, crop) {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
-    const scaleX = image.naturalWidth  / image.width;
+
+    const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    canvas.width  = crop.width;
-    canvas.height = crop.height;
+
+    const outputWidth = Math.round(crop.width * scaleX);
+    const outputHeight = Math.round(crop.height * scaleY);
+
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
+
     const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      reject(new Error('Canvas context failed'));
+      return;
+    }
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(
       image,
-      crop.x * scaleX, crop.y * scaleY,
-      crop.width * scaleX, crop.height * scaleY,
-      0, 0, crop.width, crop.height
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      outputWidth,
+      outputHeight
     );
+
     canvas.toBlob(
       (blob) => blob ? resolve(blob) : reject(new Error('Canvas empty')),
-      'image/jpeg', 0.92
+      'image/jpeg',
+      1
     );
   });
 }

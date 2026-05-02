@@ -93,3 +93,26 @@ exports.updateAvatar = async (req, res) => {
     return res.status(500).json({ message: 'Server error updating avatar' });
   }
 };
+
+
+exports.searchUsers = async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.trim().length === 0) {
+      return res.status(400).json({ message: 'Query is required' });
+    }
+
+    // 搜索username包含query的用户（不区分大小写）
+    const users = await User.find({
+      username: { $regex: query, $options: 'i' }
+    })
+      .select('_id username avatarUrl')
+      .limit(10);  // 最多返回10个结果
+
+    return res.status(200).json(users);
+  } catch (err) {
+    console.error('searchUsers error:', err);
+    return res.status(500).json({ message: 'Server error searching users' });
+  }
+};

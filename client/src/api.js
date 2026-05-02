@@ -126,3 +126,7 @@ export function getLocationByAddress(address) {
 export function getLocationByCoords(lat, lng, radius = 0.05) {
   return apiFetch(`/api/locations/by-coords?lat=${lat}&lng=${lng}&radius=${radius}`);
 }
+
+export function searchUsers(query) {
+  return apiFetch(`/api/users/search?query=${encodeURIComponent(query)}`);
+}
